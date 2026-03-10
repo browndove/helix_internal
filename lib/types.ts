@@ -6,6 +6,7 @@ export interface Facility {
   city: string;
   region: string;
   address: string;
+  userCount: number;
   createdAt: string;
 }
 
@@ -15,6 +16,15 @@ export interface FacilityInput {
   city: string;
   region: string;
   address: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  action: string;
+  actor: string;
+  target: string;
+  details?: string;
 }
 
 export interface UserSession {

@@ -33,6 +33,7 @@ export function FacilityTable({ facilities, selectedId, onSelectFacility }: Faci
             <th>Admin Email</th>
             <th>City</th>
             <th>Region</th>
+            <th>Users</th>
             <th>Address</th>
             <th>Created</th>
           </tr>
@@ -49,6 +50,9 @@ export function FacilityTable({ facilities, selectedId, onSelectFacility }: Faci
               <td>{facility.adminEmail}</td>
               <td>{facility.city}</td>
               <td>{facility.region}</td>
+              <td>
+                <span className="user-count-cell">{facility.userCount}</span>
+              </td>
               <td>{facility.address}</td>
               <td>{formatDate(facility.createdAt)}</td>
             </tr>

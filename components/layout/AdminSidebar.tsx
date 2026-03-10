@@ -1,8 +1,16 @@
-import Link from "next/link";
+"use client";
 
-const navigationItems = [{ label: "Facilities", href: "/dashboard", isActive: true }];
+interface AdminSidebarProps {
+  activeView: string;
+  onNavigate: (view: string) => void;
+}
 
-export function AdminSidebar() {
+const navigationItems = [
+  { label: "Facilities", view: "facilities" },
+  { label: "Audit Log", view: "audit" }
+];
+
+export function AdminSidebar({ activeView, onNavigate }: AdminSidebarProps) {
   return (
     <aside className="admin-sidebar">
       <div className="sidebar-brand">
@@ -19,12 +27,13 @@ export function AdminSidebar() {
         <ul className="sidebar-nav">
           {navigationItems.map((item) => (
             <li key={item.label}>
-              <Link
-                href={item.href}
-                className={item.isActive ? "nav-item nav-item-active" : "nav-item"}
+              <button
+                type="button"
+                className={activeView === item.view ? "nav-item nav-item-active" : "nav-item"}
+                onClick={() => onNavigate(item.view)}
               >
                 {item.label}
-              </Link>
+              </button>
             </li>
           ))}
         </ul>
@@ -32,3 +41,4 @@ export function AdminSidebar() {
     </aside>
   );
 }
+
