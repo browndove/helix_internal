@@ -7,6 +7,21 @@ interface FacilityDetailsProps {
     onDelete: (id: string) => void;
 }
 
+function formatFullDate(iso: string): string {
+    return new Date(iso).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+}
+
+function formatShortDate(iso: string): string {
+    return new Date(iso).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric"
+    });
+}
+
 export function FacilityDetails({
     facility,
     onClose,
@@ -14,70 +29,80 @@ export function FacilityDetails({
     onDelete
 }: FacilityDetailsProps) {
     return (
-        <section className="surface section-block">
-            <div className="details-header">
-                <div>
+        <section className="surface details-panel">
+            {/* Header */}
+            <div className="details-panel-header">
+                <div className="details-panel-title">
                     <h2>{facility.name}</h2>
-                    <p className="meta-text">{facility.city}, {facility.region}</p>
+                    <div className="details-panel-meta">
+                        <span className={`status-badge ${facility.code ? "badge-active" : "badge-pending"}`}>
+                            <span className="badge-dot" />
+                            {facility.code ? "Active" : "Pending Setup"}
+                        </span>
+                        <span className="details-location">{facility.city}, {facility.region}</span>
+                    </div>
                 </div>
                 <button className="btn btn-secondary btn-icon" onClick={onClose} aria-label="Close">✕</button>
             </div>
 
-            <div className="details-content">
-                <div className="detail-group">
-                    <label>Status</label>
-                    <div>
-                        <span className={`status-badge ${facility.code ? 'badge-active' : 'badge-pending'}`}>
-                            {facility.code ? "Active" : "Pending Setup"}
-                        </span>
-                    </div>
+            {/* Stats row */}
+            <div className="details-stats-row">
+                <div className="details-stat">
+                    <span className="details-stat-value">{facility.userCount}</span>
+                    <span className="details-stat-label">Users</span>
                 </div>
-
-                <div className="detail-group">
-                    <label>Facility Code</label>
-                    <p>{facility.code || "—"}</p>
+                <div className="details-stat">
+                    <span className="details-stat-value details-stat-code">{facility.code || "—"}</span>
+                    <span className="details-stat-label">Facility Code</span>
                 </div>
-
-                <div className="detail-group">
-                    <label>Admin Contact</label>
-                    <p>{facility.adminEmail}</p>
-                </div>
-
-                <div className="detail-group">
-                    <label>Location Address</label>
-                    <p>{facility.address}</p>
-                </div>
-
-                <div className="detail-group">
-                    <label>Registered Date</label>
-                    <p>
-                        {new Date(facility.createdAt).toLocaleDateString("en-US", {
-                            year: 'numeric', month: 'long', day: 'numeric'
-                        })}
-                    </p>
+                <div className="details-stat">
+                    <span className="details-stat-value">{formatShortDate(facility.createdAt)}</span>
+                    <span className="details-stat-label">Registered</span>
                 </div>
             </div>
 
-            <div className="activity-feed">
-                <h2 style={{ fontSize: "0.92rem", marginBottom: "8px", marginTop: "8px" }}>Recent activity</h2>
-                {facility.code && (
-                    <div className="activity-item">
-                        <strong>Setup completed</strong>
-                        <p>Code generated and onboarding instructions sent to admin.</p>
-                        <span className="activity-time">Just now</span>
-                    </div>
-                )}
-                <div className="activity-item">
-                    <strong>Account created</strong>
-                    <p>The facility account was created in the system by the admin.</p>
-                    <span className="activity-time">
-                        {new Date(facility.createdAt).toLocaleDateString("en-US", {
-                            month: 'short', day: 'numeric'
-                        })}
-                    </span>
+            {/* Info grid */}
+            <div className="details-info-grid">
+                <div className="details-info-item">
+                    <span className="details-info-label">Admin Contact</span>
+                    <span className="details-info-value">{facility.adminEmail}</span>
+                </div>
+                <div className="details-info-item">
+                    <span className="details-info-label">Address</span>
+                    <span className="details-info-value">{facility.address}</span>
+                </div>
+                <div className="details-info-item">
+                    <span className="details-info-label">Full Registration Date</span>
+                    <span className="details-info-value">{formatFullDate(facility.createdAt)}</span>
                 </div>
             </div>
 
+            {/* Activity timeline */}
+            <div className="details-activity">
+                <h3 className="details-section-heading">Activity Timeline</h3>
+                <div className="details-timeline">
+                    {facility.code && (
+                        <div className="timeline-item">
+                            <div className="timeline-dot timeline-dot-success" />
+                            <div className="timeline-content">
+                                <strong>Setup completed</strong>
+                                <p>Code generated and onboarding instructions sent to admin.</p>
+                                <span className="timeline-time">Just now</span>
+                            </div>
+                        </div>
+                    )}
+                    <div className="timeline-item">
+                        <div className="timeline-dot" />
+                        <div className="timeline-content">
+                            <strong>Account created</strong>
+                            <p>Facility account was created in the system by the admin.</p>
+                            <span className="timeline-time">{formatShortDate(facility.createdAt)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Actions */}
             <div className="details-actions">
                 {!facility.code && (
                     <button
