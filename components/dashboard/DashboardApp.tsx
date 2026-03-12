@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BlurLoader } from "@/components/common/BlurLoader";
 import { FacilityFiltersBar } from "@/components/facilities/FacilityFilters";
@@ -21,6 +21,7 @@ import {
   FacilityFilters,
   filterFacilities
 } from "@/lib/facilities";
+import { fetchAuditLogs } from "@/lib/audit";
 import { Facility, FacilityInput, UserSession, AuditLogEntry } from "@/lib/types";
 import { useStoredState } from "@/hooks/useStoredState";
 
@@ -64,6 +65,16 @@ export function DashboardApp() {
     () => filterFacilities(facilities, filters),
     [facilities, filters]
   );
+
+  useEffect(() => {
+    if (session) {
+      fetchAuditLogs().then((logs) => {
+        if (logs.length > 0) {
+          setAuditLog(logs);
+        }
+      });
+    }
+  }, [session, setAuditLog]);
 
   const cityOptions = useMemo(
     () =>
