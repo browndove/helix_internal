@@ -1,0 +1,8 @@
+# Add these in Vercel: Project → Settings → Environment Variables
+# Copy each line (Name = value). Redeploy after saving.
+# You can change values after your meeting.
+
+NEXT_PUBLIC_API_URL = https://api.helixhealth.app
+NEXT_PUBLIC_API_BASE_URL = https://api.helixhealth.app
+NEXT_PUBLIC_AUTH_LOGIN_PATH = /auth/internal/login
+NEXT_PUBLIC_AUDIT_LOGS_PATH = /internal/audit-logs
