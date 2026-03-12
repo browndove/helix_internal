@@ -48,26 +48,37 @@ export function AuditLogPage({ entries }: AuditLogPageProps) {
             <p>No audit log entries recorded yet.</p>
           </div>
         ) : (
-          <div className="audit-list">
-            {sorted.map((entry) => (
-              <div key={entry.id} className="audit-row">
-                <div className="audit-row-left">
-                  <span className={getActionBadgeClass(entry.action)}>
-                    {entry.action}
-                  </span>
-                  <div className="audit-row-info">
-                    <span className="audit-target">{entry.target}</span>
-                    {entry.details && (
-                      <span className="audit-details">{entry.details}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="audit-row-right">
-                  <span className="audit-actor">{entry.actor}</span>
-                  <span className="audit-time">{formatTimestamp(entry.timestamp)}</span>
-                </div>
-              </div>
-            ))}
+          <div className="table-wrap audit-table-wrap">
+            <table className="audit-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Details</th>
+                  <th>Actor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="audit-time-cell">{formatTimestamp(entry.timestamp)}</td>
+                    <td>
+                      <span className={getActionBadgeClass(entry.action)}>
+                        {entry.action}
+                      </span>
+                    </td>
+                    <td className="audit-target-cell">{entry.target}</td>
+                    <td className="audit-details-cell">
+                      {entry.details ? entry.details : <span className="audit-empty">—</span>}
+                    </td>
+                    <td>
+                      <span className="audit-actor">{entry.actor}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

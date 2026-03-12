@@ -1,8 +1,5 @@
 import { Facility, AuditLogEntry } from "@/lib/types";
 
-export const ADMIN_LOGIN_USERNAME = "admin";
-export const ADMIN_LOGIN_PASSWORD = "admin123";
-
 export const SEED_FACILITIES: Facility[] = [
   {
     id: "fac-101",

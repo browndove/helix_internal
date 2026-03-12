@@ -6,13 +6,11 @@ import { BlurLoader } from "@/components/common/BlurLoader";
 import { FacilityFiltersBar } from "@/components/facilities/FacilityFilters";
 import { FacilityForm } from "@/components/facilities/FacilityForm";
 import { FacilityTable } from "@/components/facilities/FacilityTable";
-import { FacilityDetails } from "@/components/facilities/FacilityDetails";
+import { FacilityDashboard } from "@/components/facilities/FacilityDashboard";
 import { AuditLogPage } from "@/components/audit/AuditLogPage";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
-import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { loginAdmin } from "@/lib/auth";
 import {
-  ADMIN_LOGIN_PASSWORD,
-  ADMIN_LOGIN_USERNAME,
   SEED_FACILITIES,
   SEED_AUDIT_LOG
 } from "@/lib/constants";
@@ -22,6 +20,7 @@ import {
   filterFacilities
 } from "@/lib/facilities";
 import { fetchAuditLogs } from "@/lib/audit";
+import { createFacility, fetchFacilities } from "@/lib/facilitiesApi";
 import { Facility, FacilityInput, UserSession, AuditLogEntry } from "@/lib/types";
 import { useStoredState } from "@/hooks/useStoredState";
 
@@ -51,8 +50,11 @@ export function DashboardApp() {
   );
   const [filters, setFilters] = useState<FacilityFilters>(DEFAULT_FACILITY_FILTERS);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<string>("facilities");
+  const [addFacilityError, setAddFacilityError] = useState<string | null>(null);
+  const [addFacilityLoading, setAddFacilityLoading] = useState(false);
 
   const selectedFacility = useMemo(
     () => facilities.find((f) => f.id === selectedFacilityId) ?? null,
@@ -67,14 +69,23 @@ export function DashboardApp() {
   );
 
   useEffect(() => {
-    if (session) {
-      fetchAuditLogs().then((logs) => {
+    if (session?.token) {
+      fetchAuditLogs(session.token).then((logs) => {
         if (logs.length > 0) {
           setAuditLog(logs);
         }
       });
     }
   }, [session, setAuditLog]);
+
+  useEffect(() => {
+    if (!isHydrated || activeView !== "facilities") return;
+    fetchFacilities().then((list) => {
+      if (list.length > 0) {
+        setFacilities(list);
+      }
+    });
+  }, [isHydrated, activeView, setFacilities]);
 
   const cityOptions = useMemo(
     () =>
@@ -112,22 +123,24 @@ export function DashboardApp() {
     setFilters(DEFAULT_FACILITY_FILTERS);
   };
 
-  const handleLogin = (username: string, password: string) => {
-    const normalizedUsername = username.trim();
-
-    if (
-      normalizedUsername !== ADMIN_LOGIN_USERNAME ||
-      password !== ADMIN_LOGIN_PASSWORD
-    ) {
-      setLoginError("Invalid credentials.");
-      return;
-    }
-
+  const handleLogin = async (email: string, password: string) => {
     setLoginError(null);
-    setSession({
-      username: normalizedUsername,
-      loggedInAt: new Date().toISOString()
-    });
+    setIsLoggingIn(true);
+
+    try {
+      const authResult = await loginAdmin(email, password);
+      setSession({
+        username: authResult.username,
+        token: authResult.token,
+        loggedInAt: new Date().toISOString()
+      });
+    } catch (error) {
+      setLoginError(
+        error instanceof Error ? error.message : "Unable to login. Please try again."
+      );
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const handleLogout = () => {
@@ -135,20 +148,25 @@ export function DashboardApp() {
     setFilters(DEFAULT_FACILITY_FILTERS);
   };
 
-  const handleAddFacility = (facilityInput: FacilityInput) => {
-    const newFacility: Facility = {
-      id: createId(),
-      createdAt: new Date().toISOString(),
-      userCount: 0,
-      ...facilityInput
-    };
-
-    setFacilities((previousFacilities) => [newFacility, ...previousFacilities]);
-    addAuditEntry(
-      "Facility Created",
-      newFacility.name,
-      `New facility registered in the ${newFacility.region}.`
-    );
+  const handleAddFacility = async (facilityInput: FacilityInput): Promise<boolean> => {
+    setAddFacilityError(null);
+    setAddFacilityLoading(true);
+    try {
+      const result = await createFacility(session?.token, facilityInput);
+      if (result.success) {
+        setFacilities((prev) => [result.facility, ...prev]);
+        addAuditEntry(
+          "Facility Created",
+          result.facility.name,
+          `New facility registered in the ${result.facility.region}.`
+        );
+        return true;
+      }
+      setAddFacilityError(result.message);
+      return false;
+    } finally {
+      setAddFacilityLoading(false);
+    }
   };
 
   const handleDeleteFacility = (id: string) => {
@@ -160,27 +178,9 @@ export function DashboardApp() {
     }
   };
 
-  const handleGenerateCode = (id: string) => {
-    const code = `FAC-${Math.floor(1000 + Math.random() * 9000).toString()}`;
-    setFacilities((prev) =>
-      prev.map((f) => {
-        if (f.id === id) {
-          return { ...f, code };
-        }
-        return f;
-      })
-    );
-    const facility = facilities.find((f) => f.id === id);
-    if (facility) {
-      addAuditEntry("Code Generated", facility.name, `Facility code ${code} assigned.`);
-    }
-  };
-
   const handleNavigate = (view: string) => {
     setActiveView(view);
-    if (view !== "facilities") {
-      setSelectedFacilityId(null);
-    }
+    setSelectedFacilityId(null);
   };
 
   if (!isHydrated) {
@@ -196,36 +196,38 @@ export function DashboardApp() {
   if (!session) {
     return (
       <main className="center-layout">
-        <LoginForm onLogin={handleLogin} errorMessage={loginError} />
+        <LoginForm
+          onLogin={handleLogin}
+          errorMessage={loginError}
+          isSubmitting={isLoggingIn}
+        />
       </main>
     );
   }
 
   return (
     <main className="dashboard-shell">
-      <AdminSidebar activeView={activeView} onNavigate={handleNavigate} />
+      <AdminSidebar
+        username={session.username}
+        activeView={activeView}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
+      />
       <section className="dashboard-main">
-        <DashboardHeader
-          username={session.username}
-          facilityCount={facilities.length}
-          searchValue={filters.search}
-          onSearchChange={(value) => handleFilterChange({ search: value })}
-          onLogout={handleLogout}
-        />
-
         {activeView === "audit" ? (
           <AuditLogPage entries={auditLog} />
+        ) : selectedFacility ? (
+          <FacilityDashboard facility={selectedFacility} />
         ) : (
-          <section className="content-grid">
-            <section className="content-main">
-              <section className="surface section-block">
-                <div className="section-title-row">
-                  <h2>Facilities</h2>
-                  <p className="meta-text">
-                    Showing {visibleFacilities.length} of {facilities.length}
-                  </p>
-                </div>
-
+          <section className="content-area facilities-page">
+            <header className="facilities-top-bar">
+              <div className="facilities-top-bar-title">
+                <h1 className="facilities-page-title">Facilities</h1>
+                <p className="facilities-page-subtitle">
+                  Showing {visibleFacilities.length} of {facilities.length} registered facilities
+                </p>
+              </div>
+              <div className="facilities-top-bar-filters">
                 <FacilityFiltersBar
                   filters={filters}
                   cities={cityOptions}
@@ -233,58 +235,53 @@ export function DashboardApp() {
                   onFilterChange={handleFilterChange}
                   onReset={handleResetFilters}
                 />
-                <FacilityTable
-                  facilities={visibleFacilities}
-                  selectedId={selectedFacilityId}
-                  onSelectFacility={setSelectedFacilityId}
-                />
-              </section>
+              </div>
+            </header>
+
+            <section className="surface section-block facilities-list-block">
+              <FacilityTable
+                facilities={visibleFacilities}
+                selectedId={selectedFacilityId}
+                onSelectFacility={setSelectedFacilityId}
+              />
             </section>
 
-            <aside className="content-side">
-              {selectedFacility ? (
-                <FacilityDetails
-                  facility={selectedFacility}
-                  onClose={() => setSelectedFacilityId(null)}
-                  onGenerateCode={handleGenerateCode}
-                  onDelete={handleDeleteFacility}
+            <section className="fd-add-facility-row">
+              <section className="surface section-block add-facility-block">
+                <h2>Add Facility</h2>
+                <p className="section-note">Facility code is generated by backend.</p>
+                <FacilityForm
+                  onAddFacility={handleAddFacility}
+                  isSubmitting={addFacilityLoading}
+                  errorMessage={addFacilityError}
                 />
-              ) : (
-                <>
-                  <section className="surface section-block">
-                    <h2>Add Facility</h2>
-                    <p className="section-note">Facility code is generated by backend.</p>
-                    <FacilityForm onAddFacility={handleAddFacility} />
-                  </section>
+              </section>
 
-                  <section className="surface section-block">
-                    <h2>Registry Snapshot</h2>
-                    <ul className="summary-list">
-                      <li>
-                        <span>Total facilities</span>
-                        <strong>{facilities.length}</strong>
-                      </li>
-                      <li>
-                        <span>Tracked cities</span>
-                        <strong>{cityOptions.length}</strong>
-                      </li>
-                      <li>
-                        <span>Tracked regions</span>
-                        <strong>{regionOptions.length}</strong>
-                      </li>
-                      <li>
-                        <span>Pending account setups</span>
-                        <strong>{facilities.filter((facility) => !facility.code).length}</strong>
-                      </li>
-                    </ul>
-                  </section>
-                </>
-              )}
-            </aside>
+              <section className="surface section-block registry-snapshot-block">
+                <h2>Registry Snapshot</h2>
+                <ul className="summary-list">
+                  <li>
+                    <span>Total facilities</span>
+                    <strong>{facilities.length}</strong>
+                  </li>
+                  <li>
+                    <span>Tracked cities</span>
+                    <strong>{cityOptions.length}</strong>
+                  </li>
+                  <li>
+                    <span>Tracked regions</span>
+                    <strong>{regionOptions.length}</strong>
+                  </li>
+                  <li>
+                    <span>Pending account setups</span>
+                    <strong>{facilities.filter((facility) => !facility.code).length}</strong>
+                  </li>
+                </ul>
+              </section>
+            </section>
           </section>
         )}
       </section>
     </main>
   );
 }
-

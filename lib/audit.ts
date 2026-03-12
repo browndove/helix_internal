@@ -1,15 +1,20 @@
 import { AuditLogEntry } from "@/lib/types";
 
-export async function fetchAuditLogs(): Promise<AuditLogEntry[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!baseUrl) {
-    console.error("NEXT_PUBLIC_API_BASE_URL is not configured");
-    return [];
+function authHeaders(token?: string): HeadersInit {
+  if (!token) {
+    return {};
   }
 
+  return {
+    Authorization: `Bearer ${token}`
+  };
+}
+
+export async function fetchAuditLogs(token?: string): Promise<AuditLogEntry[]> {
   try {
-    const response = await fetch(`${baseUrl}/audit-logs`);
+    const response = await fetch("/api/audit-logs", {
+      headers: authHeaders(token)
+    });
 
     if (!response.ok) {
       console.error(`Failed to fetch audit logs: ${response.status} ${response.statusText}`);
@@ -17,7 +22,13 @@ export async function fetchAuditLogs(): Promise<AuditLogEntry[]> {
     }
 
     const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data && typeof data === "object" && Array.isArray((data as { data?: unknown }).data)) {
+      return (data as { data: AuditLogEntry[] }).data;
+    }
+    return [];
   } catch (error) {
     console.error("Error fetching audit logs:", error);
     return [];

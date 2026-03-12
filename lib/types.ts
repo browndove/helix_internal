@@ -29,5 +29,6 @@ export interface AuditLogEntry {
 
 export interface UserSession {
   username: string;
+  token?: string;
   loggedInAt: string;
 }

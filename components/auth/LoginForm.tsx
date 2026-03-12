@@ -1,23 +1,20 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import {
-  ADMIN_LOGIN_PASSWORD,
-  ADMIN_LOGIN_USERNAME
-} from "@/lib/constants";
 
 interface LoginFormProps {
-  onLogin: (username: string, password: string) => void;
+  onLogin: (email: string, password: string) => Promise<void> | void;
   errorMessage?: string | null;
+  isSubmitting?: boolean;
 }
 
-export function LoginForm({ onLogin, errorMessage }: LoginFormProps) {
-  const [username, setUsername] = useState("");
+export function LoginForm({ onLogin, errorMessage, isSubmitting = false }: LoginFormProps) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onLogin(username, password);
+    await onLogin(email, password);
   };
 
   return (
@@ -29,12 +26,14 @@ export function LoginForm({ onLogin, errorMessage }: LoginFormProps) {
 
       <form onSubmit={handleSubmit} className="stack-md">
         <label className="field">
-          <span>Username</span>
+          <span>Email</span>
           <input
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            placeholder="Enter username"
-            autoComplete="username"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Enter email"
+            autoComplete="email"
+            disabled={isSubmitting}
             required
           />
         </label>
@@ -47,22 +46,17 @@ export function LoginForm({ onLogin, errorMessage }: LoginFormProps) {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Enter password"
             autoComplete="current-password"
+            disabled={isSubmitting}
             required
           />
         </label>
 
         {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
-        <button type="submit" className="btn btn-primary">
-          Login
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Login"}
         </button>
       </form>
-
-      <p className="auth-note">
-        Demo credentials: <strong>{ADMIN_LOGIN_USERNAME}</strong> /{" "}
-        <strong>{ADMIN_LOGIN_PASSWORD}</strong>
-      </p>
     </section>
   );
 }
-

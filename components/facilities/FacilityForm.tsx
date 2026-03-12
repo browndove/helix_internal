@@ -4,7 +4,9 @@ import { FormEvent, useState } from "react";
 import { FacilityInput } from "@/lib/types";
 
 interface FacilityFormProps {
-  onAddFacility: (facilityInput: FacilityInput) => void;
+  onAddFacility: (facilityInput: FacilityInput) => void | Promise<boolean>;
+  isSubmitting?: boolean;
+  errorMessage?: string | null;
 }
 
 const initialFormValues: FacilityInput = {
@@ -15,10 +17,10 @@ const initialFormValues: FacilityInput = {
   address: ""
 };
 
-export function FacilityForm({ onAddFacility }: FacilityFormProps) {
+export function FacilityForm({ onAddFacility, isSubmitting, errorMessage }: FacilityFormProps) {
   const [formValues, setFormValues] = useState<FacilityInput>(initialFormValues);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedValues: FacilityInput = {
@@ -40,8 +42,8 @@ export function FacilityForm({ onAddFacility }: FacilityFormProps) {
       return;
     }
 
-    onAddFacility(normalizedValues);
-    setFormValues(initialFormValues);
+    const success = await onAddFacility(normalizedValues);
+    if (success) setFormValues(initialFormValues);
   };
 
   return (
@@ -126,8 +128,13 @@ export function FacilityForm({ onAddFacility }: FacilityFormProps) {
         </label>
       </div>
 
-      <button type="submit" className="btn btn-primary">
-        Add Facility
+      {errorMessage && (
+        <p className="form-error" role="alert">
+          {errorMessage}
+        </p>
+      )}
+      <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+        {isSubmitting ? "Creating…" : "Add Facility"}
       </button>
     </form>
   );
