@@ -12,6 +12,7 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "Internal Facilities Admin",
   description: "Admin dashboard for managing facilities.",
+  icons: { icon: "/favicon.svg" },
 };
 
 interface RootLayoutProps {

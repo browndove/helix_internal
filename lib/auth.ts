@@ -24,13 +24,6 @@ export interface AuthLoginResult {
   token?: string;
 }
 
-function normalizePath(path: string): string {
-  if (!path.startsWith("/")) {
-    return `/${path}`;
-  }
-  return path;
-}
-
 function getErrorMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
     return null;
@@ -49,94 +42,58 @@ function getErrorMessage(payload: unknown): string | null {
   return null;
 }
 
+function getAuthLoginUrl(): string {
+  const base = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL?.trim();
+  const origin = base ? base.replace(/\/$/, "") : DEFAULT_API_BASE_URL;
+  return `${origin}${DEFAULT_AUTH_LOGIN_PATH}`;
+}
+
+/**
+ * Login via backend auth endpoint: /auth/internal/login.
+ */
 export async function loginAdmin(email: string, password: string): Promise<AuthLoginResult> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    DEFAULT_API_BASE_URL;
-
-  const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
-  const configuredPath = process.env.NEXT_PUBLIC_AUTH_LOGIN_PATH?.trim();
-  const defaultCandidatePaths = [
-    DEFAULT_AUTH_LOGIN_PATH,
-    "/api/v1/auth/internal/login",
-    "/auth/internal/login",
-    "/auth/admin/login",
-    "/admin/login",
-    "/auth/login",
-    "/api/auth/login",
-    "/login"
-  ];
-  const candidatePaths = configuredPath
-    ? [normalizePath(configuredPath), ...defaultCandidatePaths]
-    : defaultCandidatePaths;
-  const uniquePaths = Array.from(new Set(candidatePaths));
-
-  let notFoundCount = 0;
-
-  for (const loginPath of uniquePaths) {
-    let response: Response;
-    try {
-      response = await fetch(`${normalizedBaseUrl}${loginPath}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: email.trim(),
-          password
-        })
-      });
-    } catch {
-      throw new Error("Unable to reach backend. Please check API configuration.");
-    }
-
-    let payload: LoginApiResponse | null = null;
-    try {
-      payload = (await response.json()) as LoginApiResponse;
-    } catch {
-      payload = null;
-    }
-
-    if (response.status === 404) {
-      notFoundCount += 1;
-      continue;
-    }
-
-    if (!response.ok) {
-      const backendMessage = getErrorMessage(payload);
-      if (backendMessage) {
-        throw new Error(backendMessage);
-      }
-      if (response.status === 401 || response.status === 403) {
-        throw new Error("Invalid credentials.");
-      }
-      throw new Error("Login failed. Please try again.");
-    }
-
-    return {
-      username:
-        payload?.user?.fullName ||
-        payload?.user?.name ||
-        payload?.user?.username ||
-        payload?.user?.email ||
-        payload?.fullName ||
-        payload?.name ||
-        payload?.username ||
-        payload?.email ||
-        email.trim(),
-      token:
-        payload?.token ||
-        payload?.accessToken ||
-        payload?.access_token ||
-        payload?.jwt
-    };
+  let response: Response;
+  try {
+    response = await fetch(getAuthLoginUrl(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password }),
+    });
+  } catch {
+    throw new Error("Unable to reach backend. Please check API configuration.");
   }
 
-  if (notFoundCount === uniquePaths.length) {
-    throw new Error("Login endpoint not found on API host. Check NEXT_PUBLIC_AUTH_LOGIN_PATH.");
+  let payload: LoginApiResponse | null = null;
+  try {
+    payload = (await response.json()) as LoginApiResponse;
+  } catch {
+    payload = null;
   }
 
-  throw new Error("Login failed. Please try again.");
+  if (!response.ok) {
+    const msg = getErrorMessage(payload);
+    if (msg) throw new Error(msg);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("Invalid credentials.");
+    }
+    throw new Error("Login failed. Please try again.");
+  }
+
+  return {
+    username:
+      payload?.user?.fullName ||
+      payload?.user?.name ||
+      payload?.user?.username ||
+      payload?.user?.email ||
+      payload?.fullName ||
+      payload?.name ||
+      payload?.username ||
+      payload?.email ||
+      email.trim(),
+    token:
+      payload?.token ||
+      payload?.accessToken ||
+      payload?.access_token ||
+      payload?.jwt,
+  };
 }
