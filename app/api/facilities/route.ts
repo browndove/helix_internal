@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Facility } from "@/lib/types";
+import { DEFAULT_API_BASE_URL, DEFAULT_FACILITIES_PATH } from "@/lib/constants";
 
 function normalizePath(path: string): string {
   if (!path.startsWith("/")) {
@@ -31,28 +32,30 @@ function parseFacility(raw: Record<string, unknown>): Facility {
  * Proxies to backend GET /facilities.
  */
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!baseUrl) {
-    return NextResponse.json(
-      { message: "API URL is not configured." },
-      { status: 503 }
-    );
-  }
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    DEFAULT_API_BASE_URL;
 
   const path =
     process.env.NEXT_PUBLIC_FACILITIES_PATH?.trim() ||
     process.env.FACILITIES_PATH?.trim() ||
-    "/api/v1/facilities";
+    DEFAULT_FACILITIES_PATH;
   const normalizedPath = normalizePath(path);
   const url = `${baseUrl.replace(/\/+$/, "")}${normalizedPath}`;
+
+  const timeoutMs = 8_000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     const data = await response.json().catch(() => null);
 
@@ -79,11 +82,10 @@ export async function GET() {
 
     return NextResponse.json(facilities);
   } catch (err) {
+    clearTimeout(timeoutId);
     console.error("GET /api/facilities proxy error:", err);
-    return NextResponse.json(
-      { message: "Unable to reach the server. Please try again." },
-      { status: 502 }
-    );
+    // Return empty array so the app still loads when backend is unreachable (timeout, DNS, etc.)
+    return NextResponse.json([]);
   }
 }
 
@@ -93,14 +95,10 @@ export async function GET() {
  * Requires admin role (enforced by backend via Authorization header).
  */
 export async function POST(request: NextRequest) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!baseUrl) {
-    return NextResponse.json(
-      { message: "API URL is not configured." },
-      { status: 503 }
-    );
-  }
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    DEFAULT_API_BASE_URL;
 
   const authorization = request.headers.get("authorization");
   if (!authorization) {
@@ -123,7 +121,7 @@ export async function POST(request: NextRequest) {
   const path =
     process.env.NEXT_PUBLIC_FACILITIES_PATH?.trim() ||
     process.env.FACILITIES_PATH?.trim() ||
-    "/api/v1/facilities";
+    DEFAULT_FACILITIES_PATH;
   const normalizedPath = normalizePath(path);
   const url = `${baseUrl.replace(/\/+$/, "")}${normalizedPath}`;
 

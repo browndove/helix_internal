@@ -9,16 +9,19 @@ interface FacilityDashboardProps {
 
 /* ── Seed data for charts ────────────────────────── */
 
+const MONTH_SHORT = new Date().toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+const TODAY_MONTH_YEAR = new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
 const DAILY_VOLUME = [
-  { day: "01 SEP", value: 62 },
-  { day: "04 SEP", value: 45 },
-  { day: "08 SEP", value: 78 },
-  { day: "11 SEP", value: 55 },
-  { day: "15 SEP", value: 90 },
-  { day: "18 SEP", value: 70 },
-  { day: "22 SEP", value: 95 },
-  { day: "25 SEP", value: 85 },
-  { day: "29 SEP", value: 88 },
+  { day: `01 ${MONTH_SHORT}`, value: 62 },
+  { day: `04 ${MONTH_SHORT}`, value: 45 },
+  { day: `08 ${MONTH_SHORT}`, value: 78 },
+  { day: `11 ${MONTH_SHORT}`, value: 55 },
+  { day: `15 ${MONTH_SHORT}`, value: 90 },
+  { day: `18 ${MONTH_SHORT}`, value: 70 },
+  { day: `22 ${MONTH_SHORT}`, value: 95 },
+  { day: `25 ${MONTH_SHORT}`, value: 85 },
+  { day: `29 ${MONTH_SHORT}`, value: 88 },
 ];
 
 const HEATMAP_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
@@ -142,7 +145,7 @@ export function FacilityDashboard({ facility }: FacilityDashboardProps) {
           <div className="fd-stat-value">128,542</div>
           <div className="fd-card-footer">
             <span>Last 30 Days</span>
-            <span className="fd-footer-highlight">Sep 2026</span>
+            <span className="fd-footer-highlight">{TODAY_MONTH_YEAR}</span>
           </div>
         </div>
 

@@ -590,6 +590,14 @@ ul {
   margin-bottom: 0;
 }
 
+.facilities-top-bar-filters .filters-wrap .btn {
+  height: 42px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .content-grid {
   padding: 24px 28px;
   display: grid;
@@ -1040,7 +1048,20 @@ ul {
   grid-template-columns: minmax(150px, 1fr) minmax(170px, 1fr) auto;
   gap: 16px 20px;
   margin-bottom: 20px;
+  align-items: end;
+}
+
+.filters-wrap .field {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 6px;
   align-items: start;
+}
+
+.filters-wrap .field span {
+  min-height: 1.25em;
+  line-height: 1.25;
+  display: block;
 }
 
 .facilities-list-block .filters-wrap {

@@ -1,3 +1,5 @@
+import { DEFAULT_API_BASE_URL, DEFAULT_AUTH_LOGIN_PATH } from "@/lib/constants";
+
 interface LoginApiResponse {
   username?: string;
   email?: string;
@@ -48,15 +50,15 @@ function getErrorMessage(payload: unknown): string | null {
 }
 
 export async function loginAdmin(email: string, password: string): Promise<AuthLoginResult> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!baseUrl) {
-    throw new Error("API URL is not configured.");
-  }
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    DEFAULT_API_BASE_URL;
 
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
   const configuredPath = process.env.NEXT_PUBLIC_AUTH_LOGIN_PATH?.trim();
   const defaultCandidatePaths = [
+    DEFAULT_AUTH_LOGIN_PATH,
     "/api/v1/auth/internal/login",
     "/auth/internal/login",
     "/auth/admin/login",

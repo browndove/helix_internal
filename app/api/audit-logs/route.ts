@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AuditLogEntry } from "@/lib/types";
+import { DEFAULT_API_BASE_URL, DEFAULT_AUDIT_LOGS_PATH } from "@/lib/constants";
 
 function normalizePath(path: string): string {
   if (!path.startsWith("/")) {
@@ -21,15 +22,14 @@ function normalizePayload(data: unknown): AuditLogEntry[] {
 }
 
 export async function GET(request: NextRequest) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!baseUrl) {
-    return NextResponse.json([]);
-  }
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    DEFAULT_API_BASE_URL;
 
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
   const primaryPath = normalizePath(
-    process.env.NEXT_PUBLIC_AUDIT_LOGS_PATH?.trim() || "/internal/audit-logs"
+    process.env.NEXT_PUBLIC_AUDIT_LOGS_PATH?.trim() || DEFAULT_AUDIT_LOGS_PATH
   );
   const fallbackPath = normalizePath(
     process.env.AUDIT_LOGS_FALLBACK_PATH?.trim() || "/api/v1/audit-logs"
