@@ -1,5 +1,3 @@
-import { DEFAULT_API_BASE_URL, DEFAULT_AUTH_LOGIN_PATH } from "@/lib/constants";
-
 interface LoginApiResponse {
   username?: string;
   email?: string;
@@ -42,19 +40,14 @@ function getErrorMessage(payload: unknown): string | null {
   return null;
 }
 
-function getAuthLoginUrl(): string {
-  const base = typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL?.trim();
-  const origin = base ? base.replace(/\/$/, "") : DEFAULT_API_BASE_URL;
-  return `${origin}${DEFAULT_AUTH_LOGIN_PATH}`;
-}
-
 /**
- * Login via backend auth endpoint: /auth/internal/login.
+ * Login via same-origin proxy /api/auth/login (forwards to backend /auth/internal/login).
+ * Avoids CORS: browser only talks to internal.helixhealth.app; server calls api.helixhealth.app.
  */
 export async function loginAdmin(email: string, password: string): Promise<AuthLoginResult> {
   let response: Response;
   try {
-    response = await fetch(getAuthLoginUrl(), {
+    response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), password }),
