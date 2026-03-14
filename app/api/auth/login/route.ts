@@ -47,10 +47,13 @@ export async function POST(request: NextRequest) {
 
   let lastStatus = 0;
   let lastPayload: unknown = null;
+  let lastTriedUrl = "";
 
   for (const loginPath of uniquePaths) {
+    const url = `${normalizedBaseUrl}${loginPath}`;
+    lastTriedUrl = url;
     try {
-      const response = await fetch(`${normalizedBaseUrl}${loginPath}`, {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -101,15 +104,31 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const isDev = process.env.NODE_ENV === "development";
+  const allowDevLogin = process.env.ALLOW_DEV_LOGIN === "true" || process.env.ALLOW_DEV_LOGIN === "1";
+
+  if (isDev && allowDevLogin) {
+    return NextResponse.json({
+      username: email.split("@")[0] || "dev",
+      token: "dev-token",
+    });
+  }
+
   if (lastStatus === 404) {
     return NextResponse.json(
-      { message: "Login endpoint not found. Check API configuration." },
+      {
+        message: "Login endpoint not found. Check API configuration.",
+        tried: lastTriedUrl || undefined,
+      },
       { status: 502 }
     );
   }
 
   return NextResponse.json(
-    { message: "Unable to reach backend. Please try again." },
+    {
+      message: "Unable to reach backend. Please try again.",
+      tried: lastTriedUrl || undefined,
+    },
     { status: 502 }
   );
 }

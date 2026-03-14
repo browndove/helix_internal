@@ -4,7 +4,7 @@ import { Facility, AuditLogEntry } from "@/lib/types";
 export const DEFAULT_API_BASE_URL = "https://api.helixhealth.app";
 export const DEFAULT_AUTH_LOGIN_PATH = "/auth/internal/login";
 export const DEFAULT_FACILITIES_PATH = "/api/v1/facilities";
-export const DEFAULT_AUDIT_LOGS_PATH = "/internal/audit-logs";
+export const DEFAULT_AUDIT_LOGS_PATH = "/api/v1/internal/audit-logs";
 
 export const SEED_FACILITIES: Facility[] = [
   {

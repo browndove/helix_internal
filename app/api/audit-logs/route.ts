@@ -31,10 +31,12 @@ export async function GET(request: NextRequest) {
   const primaryPath = normalizePath(
     process.env.NEXT_PUBLIC_AUDIT_LOGS_PATH?.trim() || DEFAULT_AUDIT_LOGS_PATH
   );
-  const fallbackPath = normalizePath(
-    process.env.AUDIT_LOGS_FALLBACK_PATH?.trim() || "/api/v1/audit-logs"
-  );
-  const candidatePaths = Array.from(new Set([primaryPath, fallbackPath]));
+  const fallbackPaths = [
+    process.env.AUDIT_LOGS_FALLBACK_PATH?.trim(),
+    "/api/v1/internal/audit-logs",
+    "/internal/audit-logs",
+  ].filter(Boolean) as string[];
+  const candidatePaths = Array.from(new Set([primaryPath, ...fallbackPaths.map(normalizePath)]));
 
   const authorization = request.headers.get("authorization");
   const headers: HeadersInit = authorization ? { Authorization: authorization } : {};
