@@ -1,3 +1,5 @@
+import { DEFAULT_API_BASE_URL, DEFAULT_AUTH_LOGIN_PATH } from "@/lib/constants";
+
 interface LoginApiResponse {
   username?: string;
   email?: string;
@@ -26,28 +28,30 @@ function getErrorMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
     return null;
   }
-
-  const maybeMessage = (payload as { message?: unknown; error?: unknown }).message;
-  if (typeof maybeMessage === "string" && maybeMessage.trim().length > 0) {
-    return maybeMessage;
+  const o = payload as Record<string, unknown>;
+  const candidates = [
+    o.message,
+    o.error,
+    o.detail,
+    Array.isArray(o.errors) && o.errors[0] && typeof (o.errors[0] as { message?: string }).message === "string"
+      ? (o.errors[0] as { message: string }).message
+      : null,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim().length > 0) return c.trim();
   }
-
-  const maybeError = (payload as { message?: unknown; error?: unknown }).error;
-  if (typeof maybeError === "string" && maybeError.trim().length > 0) {
-    return maybeError;
-  }
-
   return null;
 }
 
+const LOGIN_URL = `${DEFAULT_API_BASE_URL.replace(/\/+$/, "")}${DEFAULT_AUTH_LOGIN_PATH}`;
+
 /**
- * Login via same-origin proxy /api/auth/login (forwards to backend /auth/internal/login).
- * Avoids CORS: browser only talks to internal.helixhealth.app; server calls api.helixhealth.app.
+ * Login by calling backend POST /api/v1/auth/internal/login directly.
  */
 export async function loginAdmin(email: string, password: string): Promise<AuthLoginResult> {
   let response: Response;
   try {
-    response = await fetch("/api/auth/login", {
+    response = await fetch(LOGIN_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), password }),
@@ -69,7 +73,7 @@ export async function loginAdmin(email: string, password: string): Promise<AuthL
     if (response.status === 401 || response.status === 403) {
       throw new Error("Invalid credentials.");
     }
-    throw new Error("Login failed. Please try again.");
+    throw new Error(`Login failed (${response.status}). Please try again.`);
   }
 
   return {

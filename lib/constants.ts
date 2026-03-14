@@ -2,9 +2,9 @@ import { Facility, AuditLogEntry } from "@/lib/types";
 
 /** Default API base URL when env vars are not set (e.g. no .env on Vercel). */
 export const DEFAULT_API_BASE_URL = "https://api.helixhealth.app";
-export const DEFAULT_AUTH_LOGIN_PATH = "/auth/internal/login";
+export const DEFAULT_AUTH_LOGIN_PATH = "/api/v1/auth/internal/login";
 export const DEFAULT_FACILITIES_PATH = "/api/v1/facilities";
-export const DEFAULT_AUDIT_LOGS_PATH = "/api/v1/internal/audit-logs";
+export const DEFAULT_AUDIT_LOGS_PATH = "/internal/audit-logs";
 
 export const SEED_FACILITIES: Facility[] = [
   {

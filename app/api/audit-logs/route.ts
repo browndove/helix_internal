@@ -21,6 +21,10 @@ function normalizePayload(data: unknown): AuditLogEntry[] {
   return [];
 }
 
+/**
+ * GET /api/audit-logs
+ * Proxies to backend GET /internal/audit-logs (internal dashboard only).
+ */
 export async function GET(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL ||
@@ -28,44 +32,32 @@ export async function GET(request: NextRequest) {
     DEFAULT_API_BASE_URL;
 
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
-  const primaryPath = normalizePath(
+  const path = normalizePath(
     process.env.NEXT_PUBLIC_AUDIT_LOGS_PATH?.trim() || DEFAULT_AUDIT_LOGS_PATH
   );
-  const fallbackPaths = [
-    process.env.AUDIT_LOGS_FALLBACK_PATH?.trim(),
-    "/api/v1/internal/audit-logs",
-    "/internal/audit-logs",
-  ].filter(Boolean) as string[];
-  const candidatePaths = Array.from(new Set([primaryPath, ...fallbackPaths.map(normalizePath)]));
+  const url = `${normalizedBaseUrl}${path}`;
 
   const authorization = request.headers.get("authorization");
   const headers: HeadersInit = authorization ? { Authorization: authorization } : {};
 
-  for (const path of candidatePaths) {
-    try {
-      const response = await fetch(`${normalizedBaseUrl}${path}`, {
-        headers,
-        cache: "no-store"
-      });
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+      cache: "no-store",
+    });
 
-      if (response.status === 404) {
-        continue;
-      }
-
-      if (response.status === 401 || response.status === 403) {
-        return NextResponse.json([]);
-      }
-
-      if (!response.ok) {
-        return NextResponse.json([]);
-      }
-
-      const payload = await response.json().catch(() => null);
-      return NextResponse.json(normalizePayload(payload));
-    } catch {
-      continue;
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json([]);
     }
-  }
 
-  return NextResponse.json([]);
+    if (!response.ok) {
+      return NextResponse.json([]);
+    }
+
+    const payload = await response.json().catch(() => null);
+    return NextResponse.json(normalizePayload(payload));
+  } catch {
+    return NextResponse.json([]);
+  }
 }
