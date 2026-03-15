@@ -5,6 +5,7 @@ import { Facility } from "@/lib/types";
 
 interface FacilityDashboardProps {
   facility: Facility;
+  onBackToFacilities?: () => void;
 }
 
 /* ── Seed data for charts ────────────────────────── */
@@ -85,7 +86,7 @@ function buildFacilityHeatmap(facility: Facility): Array<{ label: string; hours:
   });
 }
 
-export function FacilityDashboard({ facility }: FacilityDashboardProps) {
+export function FacilityDashboard({ facility, onBackToFacilities }: FacilityDashboardProps) {
   const [activeDonutSegment, setActiveDonutSegment] = useState<"critical" | "standard">(
     "critical"
   );
@@ -128,6 +129,16 @@ export function FacilityDashboard({ facility }: FacilityDashboardProps) {
 
   return (
     <div className="facility-dashboard">
+      {onBackToFacilities && (
+        <div className="fd-back-bar">
+          <button type="button" className="fd-back-link" onClick={onBackToFacilities}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Back to facilities
+          </button>
+        </div>
+      )}
       {/* ── Stat Cards ─────────────────────────────── */}
       <div className="fd-stats-row">
         {/* Card 1 */}
