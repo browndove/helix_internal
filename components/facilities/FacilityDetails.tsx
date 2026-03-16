@@ -6,7 +6,8 @@ interface FacilityDetailsProps {
   onClose: () => void;
   onViewUsage?: () => void;
   onGenerateCode: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void | Promise<boolean>;
+  deleteError?: string | null;
 }
 
 function formatDateAdded(iso: string): string {
@@ -94,15 +95,36 @@ export function FacilityDetails({
   onClose,
   onViewUsage,
   onGenerateCode,
-  onDelete
+  onDelete,
+  deleteError
 }: FacilityDetailsProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
 
-  const hasContact = Boolean(facility.adminEmail?.trim());
+  const hasPrimaryContact =
+    Boolean(facility.primaryContactEmail?.trim()) ||
+    Boolean(facility.primaryContactFirstName?.trim() || facility.primaryContactLastName?.trim());
+  const contactName = [facility.primaryContactFirstName, facility.primaryContactLastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim() || (facility.primaryContactEmail ? displayNameFromEmail(facility.primaryContactEmail) : "");
+  const contactEmail = facility.primaryContactEmail?.trim() || "";
+  const contactInitials = contactName
+    ? (contactName.split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 2) || "—")
+    : (contactEmail ? initialsFromEmail(contactEmail) : "—");
   const hasAdmin = Boolean(facility.adminEmail?.trim());
   const dateAdded = formatDateAdded(facility.createdAt);
   const cityRegion = [facility.city, facility.region].filter(Boolean).join(" · ") || "—";
+  const subscriptionLabel =
+    facility.subscriptionType === "1yr"
+      ? "1 Year Subscription"
+      : facility.subscriptionType === "2yr"
+        ? "2 Year Subscription"
+        : facility.subscriptionType === "trial"
+          ? "Trial"
+          : facility.code
+            ? "1 Year Subscription"
+            : "Pending Setup";
 
   useEffect(() => {
     if (!actionsOpen) return;
@@ -158,7 +180,7 @@ export function FacilityDetails({
           <div className="fd-card-row">
             <span className="fd-card-row-label">Subscription</span>
             <span className="fd-card-subscription-pill">
-              {facility.code ? "1 Year Subscription" : "Pending Setup"}
+              {subscriptionLabel}
             </span>
           </div>
         </div>
@@ -168,23 +190,31 @@ export function FacilityDetails({
           <div className="fd-card-label-row">
             <h3 className="fd-card-label">PRIMARY CONTACT</h3>
           </div>
-          {hasContact ? (
+          {hasPrimaryContact ? (
             <>
               <div className="fd-contact-row">
                 <span className="fd-contact-avatar">
-                  {initialsFromEmail(facility.adminEmail!)}
+                  {contactInitials}
                 </span>
                 <div>
                   <span className="fd-contact-name">
-                    {displayNameFromEmail(facility.adminEmail!)}
+                    {contactName || contactEmail || "—"}
                   </span>
                   <span className="fd-contact-role">Primary Contact</span>
                 </div>
               </div>
-              <div className="fd-contact-line">
-                <IconEmail />
-                <span>{facility.adminEmail}</span>
-              </div>
+              {facility.primaryContactPhone?.trim() && (
+                <div className="fd-contact-line">
+                  <IconPhone />
+                  <span>{facility.primaryContactPhone}</span>
+                </div>
+              )}
+              {contactEmail && (
+                <div className="fd-contact-line">
+                  <IconEmail />
+                  <span>{contactEmail}</span>
+                </div>
+              )}
             </>
           ) : (
             <div className="fd-empty-state">
@@ -243,6 +273,12 @@ export function FacilityDetails({
         </div>
       </div>
 
+      {deleteError && (
+        <div className="fd-panel-delete-error" role="alert">
+          {deleteError}
+        </div>
+      )}
+
       {/* Actions button + dropdown (dropdown opens above to avoid clipping) */}
       <footer className="fd-panel-actions" ref={actionsRef}>
         <div className="fd-actions-wrap">
@@ -286,7 +322,7 @@ export function FacilityDetails({
                 role="menuitem"
                 onClick={() => {
                   setActionsOpen(false);
-                  onDelete(facility.id);
+                  void Promise.resolve(onDelete(facility.id));
                 }}
               >
                 <IconTrash />

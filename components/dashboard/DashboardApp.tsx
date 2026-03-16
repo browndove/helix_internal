@@ -16,7 +16,7 @@ import {
 } from "@/lib/constants";
 import { DEFAULT_FACILITY_FILTERS, FacilityFilters, filterFacilities } from "@/lib/facilities";
 import { fetchAuditLogs } from "@/lib/audit";
-import { fetchFacilities, createFacility } from "@/lib/facilitiesApi";
+import { fetchFacilities, createFacility, deleteFacility } from "@/lib/facilitiesApi";
 import { Facility, UserSession, AuditLogEntry, FacilityInput } from "@/lib/types";
 import { useStoredState } from "@/hooks/useStoredState";
 
@@ -54,6 +54,7 @@ export function DashboardApp() {
   const [showAddFacilityForm, setShowAddFacilityForm] = useState(false);
   const [addFacilityError, setAddFacilityError] = useState<string | null>(null);
   const [isAddingFacility, setIsAddingFacility] = useState(false);
+  const [deleteFacilityError, setDeleteFacilityError] = useState<string | null>(null);
 
   const selectedFacility = useMemo(
     () => facilities.find((f) => f.id === selectedFacilityId) ?? null,
@@ -171,13 +172,20 @@ export function DashboardApp() {
     setFilters(DEFAULT_FACILITY_FILTERS);
   };
 
-  const handleDeleteFacility = (id: string) => {
+  const handleDeleteFacility = async (id: string): Promise<boolean> => {
+    setDeleteFacilityError(null);
     const facility = facilities.find((f) => f.id === id);
+    const result = await deleteFacility(session?.token, id);
+    if (!result.success) {
+      setDeleteFacilityError(result.message);
+      return false;
+    }
     setFacilities((prev) => prev.filter((f) => f.id !== id));
     if (selectedFacilityId === id) setSelectedFacilityId(null);
     if (facility) {
       addAuditEntry("Facility Deleted", facility.name, `Facility removed from the registry.`);
     }
+    return true;
   };
 
   const handleNavigate = (view: string) => {
@@ -364,10 +372,14 @@ export function DashboardApp() {
           <div className="facility-detail-drawer">
             <FacilityDetails
               facility={selectedFacility}
-              onClose={closeDetailPanel}
+              onClose={() => {
+                closeDetailPanel();
+                setDeleteFacilityError(null);
+              }}
               onViewUsage={openFacilityUsage}
               onGenerateCode={() => {}}
               onDelete={handleDeleteFacility}
+              deleteError={deleteFacilityError}
             />
           </div>
         )}

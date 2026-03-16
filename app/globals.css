@@ -2262,6 +2262,15 @@ tbody tr.row-active td:first-child {
 }
 
 /* Action row — pinned to bottom */
+.fd-panel-delete-error {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: rgba(220, 80, 80, 0.08);
+  border-top: 1px solid rgba(220, 80, 80, 0.2);
+}
+
 .fd-panel-actions {
   flex-shrink: 0;
   padding: 12px 16px;

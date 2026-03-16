@@ -95,3 +95,55 @@ export async function createFacility(
     };
   }
 }
+
+export interface DeleteFacilityResult {
+  success: true;
+}
+
+export interface DeleteFacilityError {
+  success: false;
+  message: string;
+}
+
+export type DeleteFacilityResponse = DeleteFacilityResult | DeleteFacilityError;
+
+/**
+ * Deletes a facility via DELETE /api/facilities/[id].
+ * Permanently removes the facility and associated data. Requires admin role.
+ */
+export async function deleteFacility(
+  token: string | undefined,
+  id: string
+): Promise<DeleteFacilityResponse> {
+  if (!token) {
+    return { success: false, message: "You must be logged in to delete a facility." };
+  }
+  if (!id) {
+    return { success: false, message: "Facility ID is required." };
+  }
+
+  try {
+    const response = await fetch(`/api/facilities/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const message =
+        data && typeof data === "object" && typeof (data as { message?: string }).message === "string"
+          ? (data as { message: string }).message
+          : "Failed to delete facility.";
+      return { success: false, message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("deleteFacility error:", err);
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Unable to delete facility. Please try again.",
+    };
+  }
+}
