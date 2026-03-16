@@ -237,7 +237,7 @@ export function FacilityDetails({
             <div className="fd-users-progress-fill" style={{ width: "0%" }} />
           </div>
           <div className="fd-users-footer">
-            <button type="button" className="fd-link fd-invite-link">Invite users →</button>
+            <button type="button" className="fd-link fd-invite-link">Invite admin</button>
             <span className="fd-users-last">Last active: Never</span>
           </div>
         </div>

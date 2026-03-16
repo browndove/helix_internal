@@ -22,6 +22,11 @@ export interface FacilityInput {
   city: string;
   region: string;
   address: string;
+  primaryContactEmail?: string;
+  primaryContactFirstName?: string;
+  primaryContactLastName?: string;
+  primaryContactPhone?: string;
+  subscriptionType?: string;
 }
 
 export interface AuditLogEntry {

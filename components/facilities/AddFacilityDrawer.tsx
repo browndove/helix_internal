@@ -42,7 +42,12 @@ export function AddFacilityDrawer({
       adminEmail: facility.adminEmail.trim() || contact.email.trim() || "",
       city: facility.city.trim(),
       region: facility.region.trim(),
-      address: facility.address.trim()
+      address: facility.address.trim(),
+      subscriptionType: facility.subscriptionType?.trim() || undefined,
+      primaryContactEmail: contact.email?.trim() || undefined,
+      primaryContactFirstName: contact.firstName?.trim() || undefined,
+      primaryContactLastName: contact.lastName?.trim() || undefined,
+      primaryContactPhone: contact.phone?.trim() || undefined,
     };
     if (!input.name || !input.adminEmail || !input.city || !input.region || !input.address) return;
     const ok = await onAdd(input);

@@ -122,6 +122,29 @@ export async function GET() {
   }
 }
 
+/** Map camelCase facility input to snake_case for backend. */
+function toSnakeCaseBody(obj: Record<string, unknown>): Record<string, unknown> {
+  const map: Record<string, string> = {
+    name: "name",
+    adminEmail: "admin_email",
+    city: "city",
+    region: "region",
+    address: "address",
+    primaryContactEmail: "primary_contact_email",
+    primaryContactFirstName: "primary_contact_first_name",
+    primaryContactLastName: "primary_contact_last_name",
+    primaryContactPhone: "primary_contact_phone",
+    subscriptionType: "subscription_type",
+  };
+  const out: Record<string, unknown> = {};
+  for (const [key, snakeKey] of Object.entries(map)) {
+    if (obj[key] !== undefined && obj[key] !== "") {
+      out[snakeKey] = obj[key];
+    }
+  }
+  return out;
+}
+
 /**
  * POST /api/facilities
  * Creates a new facility. Proxies to backend POST /facilities.
@@ -158,6 +181,9 @@ export async function POST(request: NextRequest) {
   const normalizedPath = normalizePath(path);
   const url = `${baseUrl.replace(/\/+$/, "")}${normalizedPath}`;
 
+  const bodyObj = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const backendBody = toSnakeCaseBody(bodyObj);
+
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -165,7 +191,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
         Authorization: authorization,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(backendBody),
       cache: "no-store",
     });
 
