@@ -6,6 +6,7 @@ import { BlurLoader } from "@/components/common/BlurLoader";
 import { FacilityTable } from "@/components/facilities/FacilityTable";
 import { FacilityDashboard } from "@/components/facilities/FacilityDashboard";
 import { FacilityDetails } from "@/components/facilities/FacilityDetails";
+import { AddFacilityDrawer } from "@/components/facilities/AddFacilityDrawer";
 import { AuditLogPage } from "@/components/audit/AuditLogPage";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { loginAdmin } from "@/lib/auth";
@@ -15,12 +16,12 @@ import {
 } from "@/lib/constants";
 import { DEFAULT_FACILITY_FILTERS, FacilityFilters, filterFacilities } from "@/lib/facilities";
 import { fetchAuditLogs } from "@/lib/audit";
-import { fetchFacilities } from "@/lib/facilitiesApi";
-import { Facility, UserSession, AuditLogEntry } from "@/lib/types";
+import { fetchFacilities, createFacility } from "@/lib/facilitiesApi";
+import { Facility, UserSession, AuditLogEntry, FacilityInput } from "@/lib/types";
 import { useStoredState } from "@/hooks/useStoredState";
 
 const SESSION_STORAGE_KEY = "internal.facilities.session.v1";
-const FACILITIES_STORAGE_KEY = "internal.facilities.list.v3";
+const FACILITIES_STORAGE_KEY = "internal.facilities.list.v4";
 const AUDIT_LOG_STORAGE_KEY = "internal.audit.log.v1";
 
 function createId(): string {
@@ -50,6 +51,9 @@ export function DashboardApp() {
   const [facilityViewMode, setFacilityViewMode] = useState<"list" | "usage">("list");
   const [activeView, setActiveView] = useState<string>("facilities");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddFacilityForm, setShowAddFacilityForm] = useState(false);
+  const [addFacilityError, setAddFacilityError] = useState<string | null>(null);
+  const [isAddingFacility, setIsAddingFacility] = useState(false);
 
   const selectedFacility = useMemo(
     () => facilities.find((f) => f.id === selectedFacilityId) ?? null,
@@ -122,13 +126,13 @@ export function DashboardApp() {
   }, [session, setAuditLog]);
 
   useEffect(() => {
-    if (!isHydrated || activeView !== "facilities") return;
+    if (!isHydrated) return;
     fetchFacilities().then((list) => {
       if (list.length > 0) {
         setFacilities(list);
       }
     });
-  }, [isHydrated, activeView, setFacilities]);
+  }, [isHydrated, setFacilities]);
 
   const addAuditEntry = (action: string, target: string, details?: string) => {
     const entry: AuditLogEntry = {
@@ -193,6 +197,34 @@ export function DashboardApp() {
   const backToFacilitiesList = () => {
     setFacilityViewMode("list");
     setSelectedFacilityId(null);
+  };
+
+  const handleAddFacility = async (input: FacilityInput): Promise<boolean> => {
+    setAddFacilityError(null);
+    setIsAddingFacility(true);
+    try {
+      const result = await createFacility(session?.token, input);
+      if (result.success) {
+        const facility: Facility = {
+          ...result.facility,
+          adminEmail: input.adminEmail || result.facility.adminEmail,
+          name: input.name || result.facility.name,
+          city: input.city || result.facility.city,
+          region: input.region || result.facility.region,
+          address: input.address || result.facility.address,
+        };
+        setFacilities((prev) => [facility, ...prev]);
+        addAuditEntry("Facility Created", facility.name, "New facility added to the registry.");
+        return true;
+      }
+      setAddFacilityError(result.message);
+      return false;
+    } catch (err) {
+      setAddFacilityError(err instanceof Error ? err.message : "Failed to add facility.");
+      return false;
+    } finally {
+      setIsAddingFacility(false);
+    }
   };
 
   if (!isHydrated) {
@@ -271,7 +303,11 @@ export function DashboardApp() {
               <button type="button" className="top-bar-reset" onClick={handleResetFilters}>
                 Reset
               </button>
-              <button type="button" className="top-bar-add btn btn-primary">
+              <button
+                type="button"
+                className="top-bar-add btn btn-primary"
+                onClick={() => setShowAddFacilityForm(true)}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
@@ -334,6 +370,17 @@ export function DashboardApp() {
               onDelete={handleDeleteFacility}
             />
           </div>
+        )}
+        {showAddFacilityForm && (
+          <AddFacilityDrawer
+            onClose={() => {
+              setShowAddFacilityForm(false);
+              setAddFacilityError(null);
+            }}
+            onAdd={handleAddFacility}
+            isSubmitting={isAddingFacility}
+            errorMessage={addFacilityError}
+          />
         )}
       </section>
     </main>

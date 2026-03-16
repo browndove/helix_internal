@@ -8,6 +8,12 @@ export interface Facility {
   address: string;
   userCount: number;
   createdAt: string;
+  /** From API: primary_contact_email; also used as adminEmail when adminEmail not provided */
+  primaryContactEmail?: string;
+  primaryContactFirstName?: string;
+  primaryContactLastName?: string;
+  primaryContactPhone?: string;
+  subscriptionType?: string;
 }
 
 export interface FacilityInput {
