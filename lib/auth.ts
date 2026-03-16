@@ -1,5 +1,3 @@
-import { DEFAULT_API_BASE_URL, DEFAULT_AUTH_LOGIN_PATH } from "@/lib/constants";
-
 interface LoginApiResponse {
   username?: string;
   email?: string;
@@ -43,15 +41,15 @@ function getErrorMessage(payload: unknown): string | null {
   return null;
 }
 
-const LOGIN_URL = `${DEFAULT_API_BASE_URL.replace(/\/+$/, "")}${DEFAULT_AUTH_LOGIN_PATH}`;
-
 /**
- * Login by calling backend POST /api/v1/auth/internal/login directly.
+ * Login by calling the local Next.js proxy at /api/auth/login.
+ * The proxy forwards the request to the backend server-side,
+ * avoiding CORS issues on deployed environments like Vercel.
  */
 export async function loginAdmin(email: string, password: string): Promise<AuthLoginResult> {
   let response: Response;
   try {
-    response = await fetch(LOGIN_URL, {
+    response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), password }),
