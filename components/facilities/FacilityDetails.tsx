@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Facility } from "@/lib/types";
+import { FacilityDashboard } from "./FacilityDashboard";
 import "./FacilityDetails.css";
 
 interface FacilityDetailsProps {
@@ -284,15 +285,13 @@ export function FacilityDetails({
         {activeTab === "Actions" && (
           <>
             <div className="fd-actions-grid">
-              {onViewUsage && (
-                <div className="fd-action-card" onClick={onViewUsage}>
-                  <div className="fd-action-icon"><IconBarChart /></div>
-                  <div>
-                    <h3>View Usage</h3>
-                    <p>Detailed reports on facility-wide operational metrics and consumption.</p>
-                  </div>
+              <div className="fd-action-card" onClick={() => setActiveTab("Usage")}>
+                <div className="fd-action-icon"><IconBarChart /></div>
+                <div>
+                  <h3>View Usage</h3>
+                  <p>Detailed reports on facility-wide operational metrics and consumption.</p>
                 </div>
-              )}
+              </div>
               
               <div className="fd-action-card">
                 <div className="fd-action-icon"><IconPencil /></div>
@@ -516,7 +515,7 @@ export function FacilityDetails({
           </div>
         )}
         {activeTab === "Usage" && (
-          <div style={{ color: "var(--text-muted)" }}>Usage content pending...</div>
+          <FacilityDashboard facility={facility} />
         )}
       </div>
     </div>
