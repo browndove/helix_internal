@@ -6,6 +6,14 @@ import { DEFAULT_API_BASE_URL, DEFAULT_AUTH_LOGIN_PATH } from "@/lib/constants";
  * Server-side proxy that forwards login credentials to the backend.
  * This avoids CORS issues since the browser only talks to the same origin.
  */
+
+export function GET() {
+  return NextResponse.json(
+    { message: "Use POST with JSON body { email, password }." },
+    { status: 405 }
+  );
+}
+
 export async function POST(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL ||

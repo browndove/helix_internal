@@ -7,6 +7,8 @@ import { FacilityTable } from "@/components/facilities/FacilityTable";
 import { FacilityDashboard } from "@/components/facilities/FacilityDashboard";
 import { FacilityDetails } from "@/components/facilities/FacilityDetails";
 import { AddFacilityDrawer } from "@/components/facilities/AddFacilityDrawer";
+import { RolesPanel } from "@/components/facilities/RolesPanel";
+import { StaffPanel } from "@/components/facilities/StaffPanel";
 import { AuditLogPage } from "@/components/audit/AuditLogPage";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { loginAdmin } from "@/lib/auth";
@@ -55,6 +57,8 @@ export function DashboardApp() {
   const [addFacilityError, setAddFacilityError] = useState<string | null>(null);
   const [isAddingFacility, setIsAddingFacility] = useState(false);
   const [deleteFacilityError, setDeleteFacilityError] = useState<string | null>(null);
+  const [showRolesPanel, setShowRolesPanel] = useState(false);
+  const [showStaffPanel, setShowStaffPanel] = useState(false);
 
   const selectedFacility = useMemo(
     () => facilities.find((f) => f.id === selectedFacilityId) ?? null,
@@ -270,6 +274,20 @@ export function DashboardApp() {
           <AuditLogPage entries={auditLog} />
         ) : activeView === "facilities" && facilityViewMode === "usage" && selectedFacility ? (
           <FacilityDashboard facility={selectedFacility} onBackToFacilities={backToFacilitiesList} />
+        ) : activeView === "facilities" && selectedFacility ? (
+          <FacilityDetails
+            facility={selectedFacility}
+            onClose={() => {
+              closeDetailPanel();
+              setDeleteFacilityError(null);
+            }}
+            onViewUsage={openFacilityUsage}
+            onGenerateCode={() => {}}
+            onDelete={handleDeleteFacility}
+            onAddRole={() => setShowRolesPanel(true)}
+            onAddStaff={() => setShowStaffPanel(true)}
+            deleteError={deleteFacilityError}
+          />
         ) : (
           <section className="content-area facilities-page">
             <header className="top-bar">
@@ -368,20 +386,11 @@ export function DashboardApp() {
             </section>
           </section>
         )}
-        {activeView === "facilities" && facilityViewMode === "list" && selectedFacility && (
-          <div className="facility-detail-drawer">
-            <FacilityDetails
-              facility={selectedFacility}
-              onClose={() => {
-                closeDetailPanel();
-                setDeleteFacilityError(null);
-              }}
-              onViewUsage={openFacilityUsage}
-              onGenerateCode={() => {}}
-              onDelete={handleDeleteFacility}
-              deleteError={deleteFacilityError}
-            />
-          </div>
+        {showRolesPanel && (
+          <RolesPanel onClose={() => setShowRolesPanel(false)} />
+        )}
+        {showStaffPanel && (
+          <StaffPanel onClose={() => setShowStaffPanel(false)} />
         )}
         {showAddFacilityForm && (
           <AddFacilityDrawer
