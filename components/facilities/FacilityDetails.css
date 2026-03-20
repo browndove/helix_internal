@@ -271,3 +271,487 @@
   margin-top: 12px;
   text-align: center;
 }
+
+/* Overview Layout */
+.fd-overview-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+}
+
+.fd-overview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Info Card shared structure */
+.fd-info-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fd-info-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0;
+  letter-spacing: 0.1em;
+}
+
+.fd-info-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.fd-info-row:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.fd-info-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.fd-info-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fd-info-sub-pill {
+  border: 1px solid #b75e2b;
+  color: #d17b48;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Primary Contact */
+.fd-info-contact-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.fd-contact-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fd-contact-avatar {
+  background: #3b2210;
+  color: var(--accent);
+  width: 54px;
+  height: 54px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.fd-contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-contact-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fd-contact-role-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fd-contact-methods {
+  display: flex;
+  gap: 32px;
+}
+
+.fd-contact-method {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+/* Admin Card */
+.fd-admin-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fd-admin-avatar {
+  background: rgba(255, 255, 255, 0.05);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fd-admin-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-admin-email {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.fd-admin-desc {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.fd-info-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.fd-status-active {
+  color: #1bbc6a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd-status-dot {
+  width: 6px;
+  height: 6px;
+  background: #1bbc6a;
+  border-radius: 50%;
+}
+
+/* Users Card */
+.fd-users-content {
+  padding: 32px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.fd-users-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fd-users-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.fd-users-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.fd-users-desc {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.fd-btn-dark {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  width: 100%;
+  padding: 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.fd-btn-dark:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Header Map Pin text */
+.fd-location-text {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Users Tab Layout - Active Directory */
+.fd-directory {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.fd-dir-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+}
+
+.fd-dir-title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fd-dir-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fd-dir-subtitle {
+  font-size: 0.85rem;
+  color: #a8795c; /* muted browinsh-orange to match screenshot */
+  margin: 0;
+}
+
+.fd-dir-search {
+  position: relative;
+  width: 280px;
+}
+
+.fd-dir-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+}
+
+.fd-dir-search input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  padding: 10px 10px 10px 36px;
+  color: var(--text);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.fd-dir-search input::placeholder {
+  color: var(--text-dim);
+}
+
+.fd-dir-search input:focus {
+  border-color: var(--text-muted);
+}
+
+.fd-dir-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fd-dir-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.fd-dir-table th {
+  padding: 16px 24px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ddb08b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.fd-dir-table td {
+  padding: 18px 24px;
+  font-size: 0.85rem;
+  color: var(--text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.fd-dir-email {
+  color: #a8795c;
+}
+
+.fd-dir-status {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  display: inline-block;
+}
+
+.fd-dir-status.active {
+  color: #1bbc6a;
+  background: rgba(27, 188, 106, 0.1);
+}
+
+.fd-dir-status.inactive {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fd-pat-access-true {
+  color: #1bbc6a;
+}
+
+.fd-pat-access-false {
+  color: rgba(255, 255, 255, 0.05);
+}
+
+.fd-dir-footer {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  background: #1a0a00;
+  border-top: 1px solid var(--border);
+}
+
+.fd-invite-box {
+  display: flex;
+  flex: 1;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  align-items: center;
+}
+
+.fd-invite-input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+.fd-invite-input-wrap svg {
+  color: var(--text-dim);
+}
+
+.fd-invite-input-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 14px 0;
+  color: var(--text);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.fd-invite-input-wrap input::placeholder {
+  color: var(--text-dim);
+}
+
+.fd-invite-controls {
+  display: flex;
+  align-items: stretch;
+  border-left: 1px solid rgba(255,255,255,0.05);
+}
+
+.fd-invite-select {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0 32px 0 16px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.fd-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fd-select-wrap::after {
+  content: "▾";
+  color: var(--text-dim);
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+}
+
+.fd-invite-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0 24px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.fd-invite-btn:hover {
+  background: var(--accent-hover);
+}
+
+
