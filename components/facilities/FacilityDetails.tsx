@@ -200,8 +200,29 @@ export function FacilityDetails({
   deleteError
 }: FacilityDetailsProps) {
   const [activeTab, setActiveTab] = useState("Overview");
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteNameInput, setDeleteNameInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const tabs = ["Overview", "Users", "Usage", "Actions"];
+  const isDeleteNameMatch = deleteNameInput.trim() === facility.name.trim();
+
+  const handleDeleteClick = async () => {
+    if (!showDeleteConfirmation) {
+      setShowDeleteConfirmation(true);
+      setDeleteNameInput("");
+      return;
+    }
+
+    if (!isDeleteNameMatch || isDeleting) return;
+
+    setIsDeleting(true);
+    try {
+      await Promise.resolve(onDelete(facility.id));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   const hasPrimaryContact =
     Boolean(facility.primaryContactEmail?.trim()) ||
@@ -333,11 +354,46 @@ export function FacilityDetails({
               <button 
                 type="button" 
                 className="fd-btn-danger"
-                onClick={() => void Promise.resolve(onDelete(facility.id))}
+                onClick={() => void handleDeleteClick()}
+                disabled={showDeleteConfirmation && (!isDeleteNameMatch || isDeleting)}
               >
                 <IconTrash />
-                DELETE FACILITY
+                {isDeleting
+                  ? "DELETING..."
+                  : showDeleteConfirmation
+                    ? "CONFIRM DELETE"
+                    : "DELETE FACILITY"}
               </button>
+
+              {showDeleteConfirmation && (
+                <div className="fd-delete-confirm" role="alert">
+                  <p className="fd-delete-confirm-title">Are you sure you want to delete this facility?</p>
+                  <p className="fd-delete-confirm-copy">
+                    This action is permanent. To continue, type <strong>{facility.name}</strong> below.
+                  </p>
+                  <input
+                    type="text"
+                    className="fd-delete-confirm-input"
+                    placeholder="Type facility name to confirm"
+                    value={deleteNameInput}
+                    onChange={(e) => setDeleteNameInput(e.target.value)}
+                    disabled={isDeleting}
+                  />
+                  <div className="fd-delete-confirm-actions">
+                    <button
+                      type="button"
+                      className="fd-btn-danger-cancel"
+                      onClick={() => {
+                        setShowDeleteConfirmation(false);
+                        setDeleteNameInput("");
+                      }}
+                      disabled={isDeleting}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
               
               {deleteError && (
                 <div className="fd-delete-error" role="alert">
