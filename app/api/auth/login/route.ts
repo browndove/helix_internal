@@ -14,6 +14,17 @@ export function GET() {
   );
 }
 
+/** Many backends expect `username`; mirror `email` when absent so one form works for both. */
+function enrichLoginProxyBody(body: unknown): unknown {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const o = body as Record<string, unknown>;
+  const email = o.email;
+  if (typeof email !== "string" || !email.trim()) return body;
+  const u = o.username;
+  if (typeof u === "string" && u.trim()) return body;
+  return { ...o, username: email.trim() };
+}
+
 export async function POST(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL ||
@@ -40,7 +51,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(enrichLoginProxyBody(body)),
       cache: "no-store",
     });
 

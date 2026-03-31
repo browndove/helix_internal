@@ -22,15 +22,30 @@ export interface AuthLoginResult {
   token?: string;
 }
 
+function normalizeDetail(detail: unknown): string | null {
+  if (typeof detail === "string" && detail.trim()) return detail.trim();
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0];
+    if (first && typeof first === "object") {
+      const row = first as { msg?: string; message?: string };
+      if (typeof row.msg === "string" && row.msg.trim()) return row.msg.trim();
+      if (typeof row.message === "string" && row.message.trim()) return row.message.trim();
+    }
+  }
+  return null;
+}
+
 function getErrorMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") {
     return null;
   }
   const o = payload as Record<string, unknown>;
+  const detailStr = normalizeDetail(o.detail);
   const candidates = [
     o.message,
     o.error,
-    o.detail,
+    detailStr,
+    typeof o.error_description === "string" ? o.error_description : null,
     Array.isArray(o.errors) && o.errors[0] && typeof (o.errors[0] as { message?: string }).message === "string"
       ? (o.errors[0] as { message: string }).message
       : null,

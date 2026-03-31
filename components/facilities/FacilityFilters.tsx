@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+import { PortalSelect } from "@/components/ui/PortalSelect";
 import { FacilityFilters } from "@/lib/facilities";
 
 interface FacilityFiltersBarProps {
@@ -17,42 +19,47 @@ export function FacilityFiltersBar({
   onFilterChange,
   onReset
 }: FacilityFiltersBarProps) {
+  const cityOptions = useMemo(
+    () => [
+      { value: "All", label: "All" },
+      ...cities.map((city) => ({ value: city, label: city })),
+    ],
+    [cities]
+  );
+  const regionOptionsSelect = useMemo(
+    () => [
+      { value: "All", label: "All" },
+      ...regions.map((region) => ({ value: region, label: region })),
+    ],
+    [regions]
+  );
+
   return (
     <div className="filters-wrap">
       <label className="field">
         <span>City</span>
-        <select
+        <PortalSelect
           value={filters.city}
-          onChange={(event) =>
-            onFilterChange({ city: event.target.value as FacilityFilters["city"] })
-          }
-        >
-          <option value="All">All</option>
-          {cities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => onFilterChange({ city: v as FacilityFilters["city"] })}
+          options={cityOptions}
+          placeholder="All"
+          triggerClassName="portal-select-trigger filters-bar-select"
+        />
       </label>
 
       <label className="field">
         <span>Region</span>
-        <select
+        <PortalSelect
           value={filters.region}
-          onChange={(event) =>
+          onChange={(v) =>
             onFilterChange({
-              region: event.target.value as FacilityFilters["region"]
+              region: v as FacilityFilters["region"],
             })
           }
-        >
-          <option value="All">All</option>
-          {regions.map((region) => (
-            <option key={region} value={region}>
-              {region}
-            </option>
-          ))}
-        </select>
+          options={regionOptionsSelect}
+          placeholder="All"
+          triggerClassName="portal-select-trigger filters-bar-select"
+        />
       </label>
 
       <button type="button" className="btn btn-secondary" onClick={onReset}>

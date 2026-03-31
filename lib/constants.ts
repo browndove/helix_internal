@@ -5,6 +5,10 @@ export const DEFAULT_API_BASE_URL = "https://api.helixhealth.app";
 export const DEFAULT_AUTH_LOGIN_PATH = "/api/v1/auth/internal/login";
 export const DEFAULT_FACILITIES_PATH = "/api/v1/facilities";
 export const DEFAULT_AUDIT_LOGS_PATH = "/internal/audit-logs";
+export const DEFAULT_DEPARTMENTS_PATH = "/api/v1/departments";
+export const DEFAULT_ROLES_PATH = "/api/v1/roles";
+export const DEFAULT_STAFF_PATH = "/api/v1/staff";
+export const DEFAULT_ESCALATION_POLICIES_PATH = "/api/v1/escalation-policies";
 
 export const SEED_FACILITIES: Facility[] = [
   {

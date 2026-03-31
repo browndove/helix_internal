@@ -6,6 +6,9 @@ interface LoginFormProps {
   onLogin: (email: string, password: string) => Promise<void> | void;
   errorMessage?: string | null;
   isSubmitting?: boolean;
+  /** Shown after logout on localhost so you can re-enter the dashboard without credentials. */
+  showLocalSkip?: boolean;
+  onSkipLocalLogin?: () => void;
 }
 
 function BrandIcon() {
@@ -39,7 +42,13 @@ function EyeOffIcon() {
   );
 }
 
-export function LoginForm({ onLogin, errorMessage, isSubmitting = false }: LoginFormProps) {
+export function LoginForm({
+  onLogin,
+  errorMessage,
+  isSubmitting = false,
+  showLocalSkip = false,
+  onSkipLocalLogin,
+}: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -115,6 +124,17 @@ export function LoginForm({ onLogin, errorMessage, isSubmitting = false }: Login
           <button type="submit" className="auth-submit" disabled={isSubmitting}>
             {isSubmitting ? "Signing in..." : "Login"}
           </button>
+
+          {showLocalSkip && onSkipLocalLogin ? (
+            <button
+              type="button"
+              className="auth-skip-local"
+              onClick={() => onSkipLocalLogin()}
+              disabled={isSubmitting}
+            >
+              Continue without signing in (localhost only)
+            </button>
+          ) : null}
         </form>
       </div>
 

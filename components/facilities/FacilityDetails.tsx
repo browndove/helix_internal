@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Facility } from "@/lib/types";
 import { FacilityDashboard } from "./FacilityDashboard";
+import { fetchStaffList } from "@/lib/staffApi";
+import { normalizeStaffDirectoryRow, type StaffDirectoryRow } from "@/lib/staffDirectoryMap";
+import { gatherPagedList } from "@/lib/v1ClientHelpers";
+import { PortalSelect } from "@/components/ui/PortalSelect";
 import "./FacilityDetails.css";
 
 interface FacilityDetailsProps {
@@ -12,6 +16,11 @@ interface FacilityDetailsProps {
   onAddRole?: () => void;
   onAddStaff?: () => void;
   deleteError?: string | null;
+  /** When set, matches this facility — API calls that need X-Facility-Id should use this id */
+  actingFacilityId?: string | null;
+  actingFacilityName?: string | null;
+  /** Bearer token for staff API (optional on localhost if backend allows unauthenticated list). */
+  accessToken?: string;
 }
 
 function formatDateAdded(iso: string): string {
@@ -180,15 +189,6 @@ const IconXCircle = () => (
   </svg>
 );
 
-const MOCK_STAFF = [
-  { id: "AMC-00124", firstName: "Kwame", lastName: "Mensah", email: "kwame.m@accramedical.com", jobTitle: "Clinical Director", department: "Administration", patientAccess: true, status: "ACTIVE" },
-  { id: "AMC-00125", firstName: "Abena", lastName: "Osei", email: "a.osei@accramedical.com", jobTitle: "Senior Surgeon", department: "Surgery", patientAccess: true, status: "ACTIVE" },
-  { id: "AMC-00128", firstName: "Kofi", lastName: "Adu", email: "kofi.adu@accramedical.com", jobTitle: "Staff Nurse", department: "Nursing", patientAccess: true, status: "INACTIVE" },
-  { id: "AMC-00131", firstName: "Efua", lastName: "Serwaa", email: "efua.s@accramedical.com", jobTitle: "Pharmacist", department: "Pharmacy", patientAccess: false, status: "ACTIVE" },
-  { id: "AMC-00135", firstName: "Ama", lastName: "Boateng", email: "ama.b@accramedical.com", jobTitle: "Receptionist", department: "Front Desk", patientAccess: false, status: "ACTIVE" },
-  { id: "AMC-00140", firstName: "Yaw", lastName: "Gyan", email: "yaw.g@accramedical.com", jobTitle: "Technician", department: "Radiology", patientAccess: true, status: "ACTIVE" }
-];
-
 export function FacilityDetails({
   facility,
   onClose,
@@ -197,15 +197,74 @@ export function FacilityDetails({
   onDelete,
   onAddRole,
   onAddStaff,
-  deleteError
+  deleteError,
+  actingFacilityId,
+  actingFacilityName,
+  accessToken
 }: FacilityDetailsProps) {
   const [activeTab, setActiveTab] = useState("Overview");
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteNameInput, setDeleteNameInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [staffRows, setStaffRows] = useState<StaffDirectoryRow[]>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<string | null>(null);
+  const [usersTabSearch, setUsersTabSearch] = useState("");
+  const [inviteRole, setInviteRole] = useState("staff");
+
+  const inviteRoleOptions = useMemo(
+    () => [
+      { value: "staff", label: "As Staff" },
+      { value: "admin", label: "As Admin" },
+    ],
+    []
+  );
 
   const tabs = ["Overview", "Users", "Usage", "Actions"];
   const isDeleteNameMatch = deleteNameInput.trim() === facility.name.trim();
+
+  useEffect(() => {
+    if (activeTab !== "Users") return;
+
+    let cancelled = false;
+    setStaffLoading(true);
+    setStaffError(null);
+    setStaffRows([]);
+
+    void (async () => {
+      const result = await gatherPagedList((q) => fetchStaffList(accessToken, facility.id, q));
+      if (cancelled) return;
+      if (!result.ok) {
+        setStaffRows([]);
+        setStaffError(result.message);
+        setStaffLoading(false);
+        return;
+      }
+      const mapped = result.items
+        .map((raw) => normalizeStaffDirectoryRow(raw))
+        .filter((row): row is StaffDirectoryRow => row !== null);
+      setStaffRows(mapped);
+      setStaffLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, facility.id, accessToken]);
+
+  const filteredStaffRows = useMemo(() => {
+    const q = usersTabSearch.trim().toLowerCase();
+    if (!q) return staffRows;
+    return staffRows.filter(
+      (s) =>
+        s.firstName.toLowerCase().includes(q) ||
+        s.lastName.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        s.jobTitle.toLowerCase().includes(q) ||
+        s.department.toLowerCase().includes(q) ||
+        s.employeeId.toLowerCase().includes(q)
+    );
+  }, [staffRows, usersTabSearch]);
 
   const handleDeleteClick = async () => {
     if (!showDeleteConfirmation) {
@@ -288,6 +347,24 @@ export function FacilityDetails({
           </div>
         </div>
         
+        <div className="fd-facility-context-banner" role="status">
+          {!actingFacilityId ? (
+            <>
+              No tenant selected for facility-scoped APIs. Choose <strong>Acting as</strong> on the facilities
+              list to send <strong>X-Facility-Id</strong> on internal admin requests.
+            </>
+          ) : actingFacilityId === facility.id ? (
+            <>
+              API tenant context matches this facility (<strong>{facility.name}</strong>).
+            </>
+          ) : (
+            <>
+              API tenant context is <strong>{actingFacilityName ?? actingFacilityId}</strong>; this page is{" "}
+              <strong>{facility.name}</strong>.
+            </>
+          )}
+        </div>
+
         <div className="fd-tabs">
           {tabs.map(tab => (
             <button
@@ -506,14 +583,39 @@ export function FacilityDetails({
             <div className="fd-dir-header">
               <div className="fd-dir-title-box">
                 <h3 className="fd-dir-title">ACTIVE DIRECTORY</h3>
-                <p className="fd-dir-subtitle">52 registered staff members</p>
+                <p className="fd-dir-subtitle">
+                  {staffLoading
+                    ? "Loading staff…"
+                    : staffError
+                      ? "Staff list unavailable"
+                      : `${staffRows.length} registered staff member${staffRows.length === 1 ? "" : "s"}`}
+                </p>
               </div>
               <div className="fd-dir-search">
                 <IconSearch />
-                <input type="text" placeholder="Search members..." />
+                <input
+                  type="text"
+                  placeholder="Search members..."
+                  value={usersTabSearch}
+                  onChange={(e) => setUsersTabSearch(e.target.value)}
+                  aria-label="Search staff members"
+                />
               </div>
             </div>
-            
+
+            {staffError ? (
+              <div className="fd-dir-banner fd-dir-banner-error" role="alert">
+                {staffError}
+                {!accessToken?.trim() ? (
+                  <span className="fd-dir-banner-hint">
+                    {" "}
+                    Sign in or set <code className="fd-dir-code">NEXT_PUBLIC_DEV_BEARER_TOKEN</code> for local
+                    API access.
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="fd-dir-table-wrap">
               <table className="fd-dir-table">
                 <thead>
@@ -529,9 +631,23 @@ export function FacilityDetails({
                   </tr>
                 </thead>
                 <tbody>
-                  {MOCK_STAFF.map(staff => (
+                  {staffLoading && staffRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="fd-dir-loading-cell">
+                        Loading staff for this facility…
+                      </td>
+                    </tr>
+                  ) : null}
+                  {!staffLoading && !staffError && filteredStaffRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="fd-dir-empty-cell">
+                        No staff found for this facility.
+                      </td>
+                    </tr>
+                  ) : null}
+                  {filteredStaffRows.map((staff) => (
                     <tr key={staff.id}>
-                      <td>{staff.id}</td>
+                      <td>{staff.employeeId}</td>
                       <td>{staff.firstName}</td>
                       <td>{staff.lastName}</td>
                       <td className="fd-dir-email">{staff.email}</td>
@@ -558,11 +674,16 @@ export function FacilityDetails({
                   <input type="email" placeholder="Invite admin or staff by email..." />
                 </div>
                 <div className="fd-invite-controls">
-                  <div className="fd-select-wrap">
-                    <select className="fd-invite-select">
-                      <option>As Staff</option>
-                      <option>As Admin</option>
-                    </select>
+                  <div className="fd-invite-portal-wrap">
+                    <PortalSelect
+                      id="fd-invite-role"
+                      value={inviteRole}
+                      onChange={setInviteRole}
+                      options={inviteRoleOptions}
+                      placeholder="As Staff"
+                      triggerClassName="portal-select-trigger fd-invite-select-trigger"
+                      aria-label="Invite as staff or admin"
+                    />
                   </div>
                   <button type="button" className="fd-invite-btn">SEND INVITE</button>
                 </div>

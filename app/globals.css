@@ -408,6 +408,32 @@ ul {
   cursor: not-allowed;
 }
 
+.auth-skip-local {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.auth-skip-local:hover:not(:disabled) {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.auth-skip-local:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .auth-page-footer {
   text-align: center;
   font-size: 0.88rem;
@@ -1218,6 +1244,28 @@ ul {
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
+button.portal-select-trigger.filters-bar-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  min-height: 44px;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  background-image: none;
+}
+
+button.portal-select-trigger.filters-bar-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
 /* ── Buttons ────────────────────────────────────── */
 
 .btn {
@@ -1339,6 +1387,27 @@ ul {
   border-bottom: 1px solid var(--border);
 }
 
+.top-bar-facility {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.top-bar-facility-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.top-bar-facility-select {
+  min-width: 140px;
+  max-width: 220px;
+}
+
 .top-bar-search {
   display: inline-flex;
   align-items: center;
@@ -1396,6 +1465,24 @@ ul {
   border-color: var(--border-light);
   color: var(--text);
   outline: none;
+}
+
+button.portal-select-trigger.top-bar-select {
+  height: 26px;
+  min-height: 26px;
+  padding: 0 22px 0 8px;
+  background-image: none;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+button.portal-select-trigger.top-bar-select:not(:disabled):hover,
+button.portal-select-trigger.top-bar-select:focus {
+  border-color: var(--border-light);
+  color: var(--text);
 }
 
 .top-bar-reset {
@@ -1853,6 +1940,13 @@ tbody tr.row-active td:first-child {
   color: var(--text-muted);
 }
 
+.add-facility-field-hint {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #7a6b60;
+}
+
 .add-facility-input {
   width: 100%;
   padding: 10px 12px;
@@ -1872,6 +1966,17 @@ tbody tr.row-active td:first-child {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.15);
+}
+
+button.portal-select-trigger.add-facility-input {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  background-image: none;
 }
 
 .add-facility-error {
@@ -4344,6 +4449,62 @@ tbody tr.row-active td:first-child {
 /* ── Roles Panel ─────────────────────────────────── */
 /* ══════════════════════════════════════════════════ */
 
+.panel-facility-context-banner {
+  flex-shrink: 0;
+  padding: 10px 24px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.panel-facility-context-banner strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.panel-facility-context-ok {
+  background: rgba(27, 188, 106, 0.08);
+}
+
+.panel-facility-context-warn {
+  background: rgba(255, 92, 0, 0.1);
+}
+
+.panel-facility-code {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.panel-facility-hint {
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+.panel-data-error {
+  flex-shrink: 0;
+  margin: 0 24px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  background: rgba(255, 70, 70, 0.1);
+  color: #ffb3b3;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.panel-table-loading {
+  text-align: center;
+  padding: 24px 16px !important;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border-bottom: none !important;
+}
+
 .roles-panel-overlay {
   position: fixed;
   inset: 0;
@@ -4677,6 +4838,8 @@ tbody tr.row-active td:first-child {
 /* ── Roles Create Form ────────────────────────────── */
 
 .roles-form-card {
+  --staff-placeholder-color: #7a6b60;
+  --roles-control-height: 42px;
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -5081,6 +5244,9 @@ tbody tr.row-active td:first-child {
 /* ── Staff Inline Form ────────────────────────────── */
 
 .staff-form-card {
+  --staff-control-height: 40px;
+  --staff-placeholder-color: #7a6b60;
+  --staff-label-color: #9a8b80;
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -5098,28 +5264,59 @@ tbody tr.row-active td:first-child {
 
 .staff-form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px 16px;
   margin-bottom: 16px;
 }
 
 .staff-form-field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.staff-form-field--full {
+  grid-column: 1 / -1;
 }
 
 .staff-form-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--staff-label-color);
+  line-height: 1.3;
+}
+
+.staff-form-required {
+  font-weight: 500;
+  color: var(--staff-label-color);
+}
+
+.staff-form-optional {
+  font-weight: 400;
   font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
+  color: var(--staff-placeholder-color);
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.staff-form-hint {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--staff-placeholder-color);
 }
 
 .staff-form-input,
 .staff-form-select {
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  min-height: var(--staff-control-height);
   padding: 9px 11px;
   border-radius: 6px;
   border: 1px solid #3d1f08;
@@ -5127,11 +5324,194 @@ tbody tr.row-active td:first-child {
   color: #fff;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.82rem;
+  line-height: 1.25;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .staff-form-input::placeholder {
-  color: #7a6b60;
+  color: var(--staff-placeholder-color);
+  opacity: 1;
+  font-weight: 400;
+}
+
+.staff-form-input[type="date"] {
+  padding: 8px 11px;
+  min-height: var(--staff-control-height);
+  line-height: 1.2;
+}
+
+/* ── Date picker (portaled calendar, year + month selects) ── */
+
+button.date-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+button.date-picker-trigger-btn.staff-form-input {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.date-picker-trigger-btn.staff-form-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.date-picker-trigger-btn.staff-form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.15);
+}
+
+.date-picker-trigger-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date-picker-trigger-text--muted {
+  color: var(--staff-placeholder-color, #7a6b60);
+  font-weight: 400;
+}
+
+.date-picker-chevron {
+  flex-shrink: 0;
+  opacity: 0.75;
+  color: #a8988c;
+  transition: transform 0.15s ease;
+}
+
+.date-picker-chevron--open {
+  transform: rotate(180deg);
+}
+
+.date-picker-menu {
+  padding: 10px 12px 12px;
+  border-radius: 8px;
+  border: 1px solid #3d1f08;
+  background: #150800;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.date-picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.date-picker-nav-btn {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid #3d1f08;
+  background: #1f0e00;
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.date-picker-nav-btn:hover {
+  border-color: #ff5c0088;
+}
+
+.date-picker-toolbar-selects {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+button.portal-select-trigger.date-picker-portal-select {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 24px 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #3d1f08;
+  background: #0d0600;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.76rem;
+}
+
+button.portal-select-trigger.date-picker-portal-select:not(:disabled):hover,
+button.portal-select-trigger.date-picker-portal-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.12);
+}
+
+.date-picker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.date-picker-weekday {
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.date-picker-cell--empty {
+  min-height: 32px;
+}
+
+.date-picker-day {
+  min-height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.date-picker-day:hover:not(:disabled) {
+  background: rgba(255, 92, 0, 0.16);
+}
+
+.date-picker-day--selected {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.date-picker-day--selected:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.date-picker-day--disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
 }
 
 .staff-form-input:focus,
@@ -5148,6 +5528,138 @@ tbody tr.row-active td:first-child {
   background-repeat: no-repeat;
   background-position: right 10px center;
   padding-right: 28px;
+  display: flex;
+  align-items: center;
+}
+
+/* Portaled listbox (escapes overflow:hidden on staff panel) */
+button.portal-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--staff-control-height, 40px);
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 6px;
+  border: 1px solid #3d1f08;
+  background: #150800;
+  color: #fff;
+  font: inherit;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 400;
+  text-align: left;
+  line-height: 1.25;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+button.portal-select-trigger.staff-form-select {
+  background-image: none;
+}
+
+button.portal-select-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.portal-select-trigger:not(:disabled):hover {
+  border-color: #5a3820;
+}
+
+button.portal-select-trigger:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.15);
+}
+
+.portal-select-trigger-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.portal-select-trigger-text--muted {
+  color: var(--staff-placeholder-color, #7a6b60);
+  font-weight: 400;
+}
+
+.portal-select-chevron {
+  flex-shrink: 0;
+  opacity: 0.75;
+  color: #a8988c;
+  transition: transform 0.15s ease;
+}
+
+.portal-select-chevron--open {
+  transform: rotate(180deg);
+}
+
+.portal-select-menu {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  border-radius: 6px;
+  border: 1px solid #3d1f08;
+  background: #150800;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.portal-select-empty {
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.portal-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.portal-select-option-check {
+  width: 18px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.portal-select-option-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-select-option:hover,
+.portal-select-option--highlight {
+  background: rgba(255, 92, 0, 0.12);
+}
+
+.portal-select-option--selected {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+button.portal-select-trigger.roles-form-select {
+  background-image: none;
+  min-height: var(--roles-control-height, 42px);
+  padding: 10px 32px 10px 12px;
+  font-size: 0.86rem;
+  border-radius: 8px;
 }
 
 .staff-form-submit-btn {
@@ -5256,6 +5768,24 @@ tbody tr.row-active td:first-child {
   border-color: var(--border-light);
   color: var(--text);
   outline: none;
+}
+
+button.portal-select-trigger.staff-sort-select-btn {
+  min-height: auto;
+  height: auto;
+  padding: 5px 28px 5px 6px;
+  background-color: transparent;
+  background-image: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+button.portal-select-trigger.staff-sort-select-btn:not(:disabled):hover,
+button.portal-select-trigger.staff-sort-select-btn:focus {
+  border-color: var(--border-light);
+  color: var(--text);
 }
 
 /* ── Staff Table ──────────────────────────────────── */

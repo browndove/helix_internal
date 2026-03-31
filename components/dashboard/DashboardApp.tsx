@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useLayoutEffect } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BlurLoader } from "@/components/common/BlurLoader";
 import { FacilityTable } from "@/components/facilities/FacilityTable";
@@ -9,6 +9,7 @@ import { FacilityDetails } from "@/components/facilities/FacilityDetails";
 import { AddFacilityDrawer } from "@/components/facilities/AddFacilityDrawer";
 import { RolesPanel } from "@/components/facilities/RolesPanel";
 import { StaffPanel } from "@/components/facilities/StaffPanel";
+import { PortalSelect } from "@/components/ui/PortalSelect";
 import { AuditLogPage } from "@/components/audit/AuditLogPage";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { loginAdmin } from "@/lib/auth";
@@ -21,10 +22,12 @@ import { fetchAuditLogs } from "@/lib/audit";
 import { fetchFacilities, createFacility, deleteFacility } from "@/lib/facilitiesApi";
 import { Facility, UserSession, AuditLogEntry, FacilityInput } from "@/lib/types";
 import { useStoredState } from "@/hooks/useStoredState";
+import { createLocalSyntheticSession, isLocalDevHostname } from "@/lib/localDevAuth";
 
 const SESSION_STORAGE_KEY = "internal.facilities.session.v1";
 const FACILITIES_STORAGE_KEY = "internal.facilities.list.v4";
 const AUDIT_LOG_STORAGE_KEY = "internal.audit.log.v1";
+const ACTING_FACILITY_STORAGE_KEY = "internal.actingFacility.id.v1";
 
 function createId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -46,6 +49,10 @@ export function DashboardApp() {
     AUDIT_LOG_STORAGE_KEY,
     SEED_AUDIT_LOG
   );
+  const [actingFacilityId, setActingFacilityId, actingFacilityReady] = useStoredState<string | null>(
+    ACTING_FACILITY_STORAGE_KEY,
+    null
+  );
   const [filters, setFilters] = useState<FacilityFilters>(DEFAULT_FACILITY_FILTERS);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -59,13 +66,48 @@ export function DashboardApp() {
   const [deleteFacilityError, setDeleteFacilityError] = useState<string | null>(null);
   const [showRolesPanel, setShowRolesPanel] = useState(false);
   const [showStaffPanel, setShowStaffPanel] = useState(false);
+  /** After logout on localhost, show the real login screen until user signs in or skips again. */
+  const [forceLoginOnLocal, setForceLoginOnLocal] = useState(false);
+  const [localBypassEnabled, setLocalBypassEnabled] = useState(false);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    setLocalBypassEnabled(isLocalDevHostname(window.location.hostname));
+  }, []);
+
+  const requireLoginEverywhere = process.env.NEXT_PUBLIC_REQUIRE_LOGIN === "true";
+
+  const activeSession = useMemo((): UserSession | null => {
+    if (session) return session;
+    if (requireLoginEverywhere || forceLoginOnLocal || !localBypassEnabled) return null;
+    return createLocalSyntheticSession();
+  }, [session, requireLoginEverywhere, forceLoginOnLocal, localBypassEnabled]);
 
   const selectedFacility = useMemo(
     () => facilities.find((f) => f.id === selectedFacilityId) ?? null,
     [facilities, selectedFacilityId]
   );
 
-  const isHydrated = sessionReady && facilitiesReady && auditReady;
+  const isHydrated = sessionReady && facilitiesReady && auditReady && actingFacilityReady;
+
+  const actingFacility = useMemo(
+    () => (actingFacilityId ? facilities.find((f) => f.id === actingFacilityId) ?? null : null),
+    [actingFacilityId, facilities]
+  );
+
+  useEffect(() => {
+    if (!actingFacilityId) return;
+    if (!facilities.some((f) => f.id === actingFacilityId)) {
+      setActingFacilityId(null);
+    }
+  }, [actingFacilityId, facilities, setActingFacilityId]);
+
+  useEffect(() => {
+    if (!selectedFacilityId) {
+      setShowRolesPanel(false);
+      setShowStaffPanel(false);
+    }
+  }, [selectedFacilityId]);
 
   const filteredByFilters = useMemo(
     () => filterFacilities(facilities, filters),
@@ -100,6 +142,32 @@ export function DashboardApp() {
     [facilities]
   );
 
+  const actingFacilitySelectOptions = useMemo(
+    () => [
+      { value: "", label: "No facility selected" },
+      ...[...facilities]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((f) => ({ value: f.id, label: f.name })),
+    ],
+    [facilities]
+  );
+
+  const cityFilterSelectOptions = useMemo(
+    () => [
+      { value: "All", label: "All Cities" },
+      ...cityOptions.map((c) => ({ value: c, label: c })),
+    ],
+    [cityOptions]
+  );
+
+  const regionFilterSelectOptions = useMemo(
+    () => [
+      { value: "All", label: "All Regions" },
+      ...regionOptions.map((r) => ({ value: r, label: r })),
+    ],
+    [regionOptions]
+  );
+
   const handleFilterChange = (next: Partial<FacilityFilters>) => {
     setFilters((prev) => ({ ...prev, ...next }));
   };
@@ -121,14 +189,14 @@ export function DashboardApp() {
   }, [facilities]);
 
   useEffect(() => {
-    if (session?.token) {
-      fetchAuditLogs(session.token).then((logs) => {
+    if (activeSession?.token) {
+      fetchAuditLogs(activeSession.token).then((logs) => {
         if (logs.length > 0) {
           setAuditLog(logs);
         }
       });
     }
-  }, [session, setAuditLog]);
+  }, [activeSession?.token, setAuditLog]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -144,7 +212,7 @@ export function DashboardApp() {
       id: createId(),
       timestamp: new Date().toISOString(),
       action,
-      actor: session?.username ?? "system",
+      actor: activeSession?.username ?? "system",
       target,
       details
     };
@@ -157,6 +225,7 @@ export function DashboardApp() {
 
     try {
       const authResult = await loginAdmin(email, password);
+      setForceLoginOnLocal(false);
       setSession({
         username: authResult.username,
         token: authResult.token,
@@ -174,18 +243,22 @@ export function DashboardApp() {
   const handleLogout = () => {
     setSession(null);
     setFilters(DEFAULT_FACILITY_FILTERS);
+    if (localBypassEnabled) {
+      setForceLoginOnLocal(true);
+    }
   };
 
   const handleDeleteFacility = async (id: string): Promise<boolean> => {
     setDeleteFacilityError(null);
     const facility = facilities.find((f) => f.id === id);
-    const result = await deleteFacility(session?.token, id);
+    const result = await deleteFacility(activeSession?.token, id);
     if (!result.success) {
       setDeleteFacilityError(result.message);
       return false;
     }
     setFacilities((prev) => prev.filter((f) => f.id !== id));
     if (selectedFacilityId === id) setSelectedFacilityId(null);
+    if (actingFacilityId === id) setActingFacilityId(null);
     if (facility) {
       addAuditEntry("Facility Deleted", facility.name, `Facility removed from the registry.`);
     }
@@ -215,7 +288,7 @@ export function DashboardApp() {
     setAddFacilityError(null);
     setIsAddingFacility(true);
     try {
-      const result = await createFacility(session?.token, input);
+      const result = await createFacility(activeSession?.token, input);
       if (result.success) {
         const facility: Facility = {
           ...result.facility,
@@ -249,13 +322,15 @@ export function DashboardApp() {
     );
   }
 
-  if (!session) {
+  if (!activeSession) {
     return (
       <main className="center-layout">
         <LoginForm
           onLogin={handleLogin}
           errorMessage={loginError}
           isSubmitting={isLoggingIn}
+          showLocalSkip={localBypassEnabled && forceLoginOnLocal}
+          onSkipLocalLogin={() => setForceLoginOnLocal(false)}
         />
       </main>
     );
@@ -264,7 +339,7 @@ export function DashboardApp() {
   return (
     <main className="dashboard-shell">
       <AdminSidebar
-        username={session.username}
+        username={activeSession.username}
         activeView={activeView}
         onNavigate={handleNavigate}
         onLogout={handleLogout}
@@ -287,10 +362,25 @@ export function DashboardApp() {
             onAddRole={() => setShowRolesPanel(true)}
             onAddStaff={() => setShowStaffPanel(true)}
             deleteError={deleteFacilityError}
+            actingFacilityId={actingFacilityId}
+            actingFacilityName={actingFacility?.name ?? null}
+            accessToken={activeSession?.token}
           />
         ) : (
           <section className="content-area facilities-page">
             <header className="top-bar">
+              <label className="top-bar-facility" htmlFor="acting-facility-select">
+                <span className="top-bar-facility-label">Acting as</span>
+                <PortalSelect
+                  id="acting-facility-select"
+                  triggerClassName="top-bar-select top-bar-facility-select"
+                  value={actingFacilityId ?? ""}
+                  onChange={(v) => setActingFacilityId(v.trim() || null)}
+                  options={actingFacilitySelectOptions}
+                  placeholder="No facility selected"
+                  aria-label="Facility context for internal admin API calls"
+                />
+              </label>
               <label className="top-bar-search">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <circle cx="11" cy="11" r="8" />
@@ -304,28 +394,24 @@ export function DashboardApp() {
                   aria-label="Search facilities"
                 />
               </label>
-              <select
-                className="top-bar-select"
+              <PortalSelect
+                id="facility-filter-city"
+                triggerClassName="top-bar-select"
                 value={filters.city}
-                onChange={(e) => handleFilterChange({ city: e.target.value as FacilityFilters["city"] })}
+                onChange={(v) => handleFilterChange({ city: v as FacilityFilters["city"] })}
+                options={cityFilterSelectOptions}
+                placeholder="All Cities"
                 aria-label="Filter by city"
-              >
-                <option value="All">All Cities</option>
-                {cityOptions.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-              <select
-                className="top-bar-select"
+              />
+              <PortalSelect
+                id="facility-filter-region"
+                triggerClassName="top-bar-select"
                 value={filters.region}
-                onChange={(e) => handleFilterChange({ region: e.target.value as FacilityFilters["region"] })}
+                onChange={(v) => handleFilterChange({ region: v as FacilityFilters["region"] })}
+                options={regionFilterSelectOptions}
+                placeholder="All Regions"
                 aria-label="Filter by region"
-              >
-                <option value="All">All Regions</option>
-                {regionOptions.map((region) => (
-                  <option key={region} value={region}>{region}</option>
-                ))}
-              </select>
+              />
               <button type="button" className="top-bar-reset" onClick={handleResetFilters}>
                 Reset
               </button>
@@ -381,17 +467,30 @@ export function DashboardApp() {
               <FacilityTable
                 facilities={visibleFacilities}
                 selectedId={selectedFacilityId}
-                onSelectFacility={setSelectedFacilityId}
+                onSelectFacility={(id) => {
+                  setSelectedFacilityId(id);
+                  setActingFacilityId(id);
+                }}
               />
             </section>
           </section>
         )}
-        {showRolesPanel && (
-          <RolesPanel onClose={() => setShowRolesPanel(false)} />
-        )}
-        {showStaffPanel && (
-          <StaffPanel onClose={() => setShowStaffPanel(false)} />
-        )}
+        {showRolesPanel && selectedFacility ? (
+          <RolesPanel
+            onClose={() => setShowRolesPanel(false)}
+            facilityId={selectedFacility.id}
+            facilityName={selectedFacility.name}
+            accessToken={activeSession?.token}
+          />
+        ) : null}
+        {showStaffPanel && selectedFacility ? (
+          <StaffPanel
+            onClose={() => setShowStaffPanel(false)}
+            facilityId={selectedFacility.id}
+            facilityName={selectedFacility.name}
+            accessToken={activeSession?.token}
+          />
+        ) : null}
         {showAddFacilityForm && (
           <AddFacilityDrawer
             onClose={() => {
